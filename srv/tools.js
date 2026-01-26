@@ -2,7 +2,7 @@ const cds = require('@sap/cds');
 const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
 const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
 const { z } = require("zod");
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } =  import('uuid');
 const {
     validateRequesterId,
     validateProductName,

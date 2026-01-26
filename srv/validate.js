@@ -1,6 +1,6 @@
 const cds = require('@sap/cds');
-const fetch = require('node-fetch');
-const { v4: uuidv4 } = require('uuid');
+const fetch = import('node-fetch');
+const { v4: uuidv4 } = import('uuid');
 
 
 // validate.js

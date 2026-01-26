@@ -9,6 +9,7 @@
     "@sap-cloud-sdk/resilience": "^4.3.1",
     "@sap/cds": "^9",
     "express": "^4",
+    "node-fetch": "^3.3.2",
     "uuid": "^13.0.0",
     "zod": "^4.3.6"
   },
