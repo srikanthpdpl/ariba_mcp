@@ -1,7 +1,7 @@
 const cds = require('@sap/cds');
 const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
 const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
-// const { z } = require("zod");
+const { z } = require("zod");
 const { v4: uuidv4 } = require('uuid');
 const {
     validateRequesterId,
@@ -20,30 +20,51 @@ const {
 
 module.exports = cds.service.impl(async function () {
 
+    function runAllValidations(data) {
+        const validations = [
+            validateRequesterId(data.requesterId),
+            validateProductName(data.productName),
+            validateDescription(data.description),
+            validateQuantity(data.quantity, { productName: data.productName }),
+            validatePrice(data.price),
+            validateCurrency(data.currency),
+            validateSupplierId(data.supplierId),
+            validateNeedByDate(data.needByDate),
+            validateCompanyCode(data.companyCode),
+            validateGLAccount(data.glAccount),
+            validateCostCenter(data.costCenter),
+            validateIsSourcingPr(data.isSourcingPr)
+        ];
+
+        const failed = validations.find(v => v.success === false);
+
+        if (failed) {
+            throw new Error(failed.message);
+        }
+    }
+
+
     this.on('createAribaPurchaseRequisition', async (req) => {
         try {
-            validateAccounting();
-            validateBuyerAccess();
-            validateVendor();
+
+            runAllValidations(req.data);
+
             return {
                 success: true,
                 requisitionId: uuidv4(),
                 status: "Created",
                 messages: ["Purchase Requisition Created"]
-            }
+            };
 
         } catch (error) {
             return {
                 success: false,
                 requisitionId: uuidv4(),
                 status: "Failed",
-                messages: ["Validation Failed"]
-            }
-
+                messages: [error.message || "Validation Failed"]
+            };
         }
-
-
-    })
+    });
 
 
     // Tools

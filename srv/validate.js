@@ -262,21 +262,7 @@ function validateIsSourcingPr(value) {
   return { success: true, message: "Sourcing flag is valid" };
 }
 
-// ---------- Exports ----------
-module.exports = {
-  validateRequesterId,
-  validateProductName,
-  validateDescription,
-  validateQuantity,
-  validatePrice,
-  validateCurrency,
-  validateSupplierId,
-  validateNeedByDate,
-  validateCompanyCode,
-  validateGLAccount,
-  validateCostCenter,
-  validateIsSourcingPr
-};
+
 
 
 
@@ -394,5 +380,20 @@ function parseRequisitionImportPullResponse(xml) {
   };
 }
 
+// ---------- Exports ----------
+module.exports = {
+  validateRequesterId,
+  validateProductName,
+  validateDescription,
+  validateQuantity,
+  validatePrice,
+  validateCurrency,
+  validateSupplierId,
+  validateNeedByDate,
+  validateCompanyCode,
+  validateGLAccount,
+  validateCostCenter,
+  validateIsSourcingPr
+};
 
-module.exports = { validateBuyerAccess, validateVendor, validateAccounting }
+
