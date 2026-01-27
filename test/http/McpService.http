@@ -1,0 +1,26 @@
+@server=http://localhost:4004
+@username=alice
+@password=
+
+
+### createAribaPurchaseRequisition
+
+
+POST {{server}}/mcps/createAribaPurchaseRequisition
+Content-Type: application/json
+Authorization: Basic {{username}}:{{password}}
+
+{
+  "requesterId": "requesterId-6325225",
+  "productName": "productName-6325225",
+  "description": "description-6325225",
+  "quantity": 19,
+  "price": 803071617.29,
+  "currency": "currency-6325225",
+  "supplierId": "supplierId-6325225",
+  "needByDate": "needByDate-6325225",
+  "companyCode": "companyCode-6325225",
+  "glAccount": "glAccount-6325225",
+  "costCenter": "costCenter-6325225",
+  "isSourcingPr": false
+}

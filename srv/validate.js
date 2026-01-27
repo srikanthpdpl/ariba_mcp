@@ -1,6 +1,6 @@
 const cds = require('@sap/cds');
 const fetch = import('node-fetch');
-const { v4: uuidv4 } = import('uuid');
+// const { v4: uuidv4 } = import('uuid');
 
 
 // validate.js
@@ -87,41 +87,48 @@ function validateDescription(value) {
   return { success: true, message: "Description is valid" };
 }
 
-function validateQuantity(value, context = {}) {
-  if (value === null || value === undefined) {
+function validateQuantity(value) {
+  if (value === null || value === undefined || value === "") {
     return { success: false, message: "Quantity is mandatory" };
   }
 
-  if (typeof value !== "number") {
+  const quantity = Number(value);
+
+  if (Number.isNaN(quantity)) {
     return { success: false, message: "Quantity must be a number" };
   }
 
-  if (value <= 0) {
+  if (quantity <= 0) {
     return { success: false, message: "Quantity must be greater than zero" };
   }
 
-  const maxQty = productQuantityMap[context.productName];
-  if (maxQty !== undefined && value > maxQty) {
-    return { success: false, message: "Requested quantity exceeds available stock" };
+  const maxQty = 100;
+  if (quantity > maxQty) {
+    return {
+      success: false,
+      message: "Requested quantity exceeds available stock"
+    };
   }
 
-  return { success: true, message: "Quantity is valid" };
+  return { success: true, message: "Quantity is valid", value: quantity };
 }
 
 function validatePrice(value) {
-  if (value === null || value === undefined) {
+  if (value === null || value === undefined || value === "") {
     return { success: false, message: "Price is mandatory" };
   }
 
-  if (typeof value !== "number") {
+  const price = Number(value);
+
+  if (Number.isNaN(price)) {
     return { success: false, message: "Price must be a numeric value" };
   }
 
-  if (value <= 0) {
+  if (price <= 0) {
     return { success: false, message: "Price must be greater than zero" };
   }
 
-  return { success: true, message: "Price is valid" };
+  return { success: true, message: "Price is valid", value: price };
 }
 
 function validateCurrency(value) {
@@ -270,7 +277,8 @@ function validateIsSourcingPr(value) {
 
 
 function buildRequisitionImportPullEnvelope(input) {
-  const uniqueReqId = uuidv4();
+  // const uniqueReqId = uuidv4();
+  const uniqueReqId = crypto.randomUUID();
   const sourcingFlag = input.isSourcingPr ? 'true' : 'false';
 
   return `

@@ -2,7 +2,7 @@ const cds = require('@sap/cds');
 const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
 const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
 const { z } = require("zod");
-const { v4: uuidv4 } =  import('uuid');
+// const { v4: uuidv4 } =  import('uuid');
 const {
     validateRequesterId,
     validateProductName,
@@ -25,7 +25,7 @@ module.exports = cds.service.impl(async function () {
             validateRequesterId(data.requesterId),
             validateProductName(data.productName),
             validateDescription(data.description),
-            validateQuantity(data.quantity, { productName: data.productName }),
+            validateQuantity(data.quantity),
             validatePrice(data.price),
             validateCurrency(data.currency),
             validateSupplierId(data.supplierId),
@@ -51,7 +51,7 @@ module.exports = cds.service.impl(async function () {
 
             return {
                 success: true,
-                requisitionId: uuidv4(),
+                requisitionId: crypto.randomUUID(),
                 status: "Created",
                 messages: ["Purchase Requisition Created"]
             };
@@ -59,7 +59,7 @@ module.exports = cds.service.impl(async function () {
         } catch (error) {
             return {
                 success: false,
-                requisitionId: uuidv4(),
+                requisitionId: null,
                 status: "Failed",
                 messages: [error.message || "Validation Failed"]
             };
@@ -104,10 +104,7 @@ Proceed only when all validations succeed.
     `,
             inputSchema: {
                 field: z.enum(Object.keys(validators)),
-                value: z.any(),
-                context: z.optional(z.object({
-                    productName: z.string().optional()
-                }))
+                value: z.any()
             }
         },
         async ({ field, value, context }) => {
@@ -128,7 +125,7 @@ Proceed only when all validations succeed.
                 };
             }
 
-            const result = validator(value, context);
+            const result = validator(value)
 
             return {
                 content: [{

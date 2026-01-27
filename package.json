@@ -23,6 +23,7 @@
   "private": true,
   "cds": {
     "requires": {
+      "auth": "dummy",
       "destinations": true
     }
   }
