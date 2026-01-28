@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "A simple CAP project.",
   "dependencies": {
-    "@cap-js/hana": "^2",
     "@modelcontextprotocol/sdk": "^1.25.3",
     "@sap-cloud-sdk/http-client": "^4.3.1",
     "@sap-cloud-sdk/resilience": "^4.3.1",
@@ -14,7 +13,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@cap-js/sqlite": "^2",
     "@sap/cds-dk": "^9"
   },
   "scripts": {

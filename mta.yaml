@@ -23,24 +23,10 @@ modules:
       - name: srv-api
         properties:
           srv-url: ${default-url}
-    requires:
-      - name: ariba_mcp-db
+    requires:   
       - name: ariba_mcp-destination
 
-  - name: ariba_mcp-db-deployer
-    type: hdb
-    path: gen/db
-    parameters:
-      buildpack: nodejs_buildpack
-    requires:
-      - name: ariba_mcp-db
-
-resources:
-  - name: ariba_mcp-db
-    type: com.sap.xs.hdi-container
-    parameters:
-      service: hana
-      service-plan: hdi-shared
+  
   - name: ariba_mcp-destination
     type: org.cloudfoundry.managed-service
     parameters:
