@@ -42,8 +42,38 @@ const allowedSuppliers = ["SUPP_1001", "SUPP_1002", "SUPP_2001", "SUPP_3005"];
 const allowedCompanyCodes = ["1000", "2000", "3000", "4000"];
 const allowedGLAccounts = ["500000", "500100", "500200", "600000"];
 const allowedCostCenters = ["CC100", "CC200", "CC300", "CC400"];
+const allowedContractIds = [
+  "CTR-1001",
+  "CTR-1002",
+  "CTR-1003",
+  "CTR-2001"
+];
 
 // ---------- Validators ----------
+
+function validateContractId(value) {
+  if (!value) {
+    return {
+      success: false,
+      expectedValues: allowedContractIds,
+      message: "Contract ID is mandatory"
+    };
+  }
+
+  if (!allowedContractIds.includes(value)) {
+    return {
+      success: false,
+      expectedValues: allowedContractIds,
+      message: "Contract ID is not valid"
+    };
+  }
+
+  return {
+    success: true,
+    message: "Contract ID is valid"
+  };
+}
+
 function validateRequesterId(value) {
   if (!value) return { success: false, message: "Requester ID is mandatory" };
 
@@ -60,6 +90,7 @@ function validateRequesterId(value) {
 }
 
 function validateProductName(value) {
+
   if (!value) {
     return {
       success: false,
@@ -68,7 +99,12 @@ function validateProductName(value) {
     };
   }
 
-  if (!allowedProducts.includes(value)) {
+  const normalizedValue = value.toString().trim().toLowerCase();
+  const normalizedAllowed = allowedProducts.map(p =>
+    p.toString().trim().toLowerCase()
+  );
+
+  if (!normalizedAllowed.includes(normalizedValue)) {
     return {
       success: false,
       expectedValues: allowedProducts,
@@ -76,7 +112,10 @@ function validateProductName(value) {
     };
   }
 
-  return { success: true, message: "Product name is valid" };
+  return {
+    success: true,
+    message: "Product name is valid"
+  };
 }
 
 function validateDescription(value) {
@@ -132,6 +171,7 @@ function validatePrice(value) {
 }
 
 function validateCurrency(value) {
+  value = value ? value.toUpperCase() : value;
   if (!value) {
     return {
       success: false,
@@ -401,7 +441,8 @@ module.exports = {
   validateCompanyCode,
   validateGLAccount,
   validateCostCenter,
-  validateIsSourcingPr
+  validateIsSourcingPr,
+  validateContractId
 };
 
 

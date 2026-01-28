@@ -15,13 +15,17 @@ const {
     validateCompanyCode,
     validateGLAccount,
     validateCostCenter,
-    validateIsSourcingPr
+    validateIsSourcingPr,
+    validateContractId
 } = require("./validate");
 
 module.exports = cds.service.impl(async function () {
 
-    function runAllValidations(data) {
-        const validations = [
+    function runAllValidations(data,type) {
+        var validations = [];
+
+        if(type === 'quotation'){
+            validations = [
             validateRequesterId(data.requesterId),
             validateProductName(data.productName),
             validateDescription(data.description),
@@ -36,6 +40,23 @@ module.exports = cds.service.impl(async function () {
             validateIsSourcingPr(data.isSourcingPr)
         ];
 
+        }
+
+        if(type === 'contract'){
+            validations = [
+            validateRequesterId(data.requesterId),
+            validateContractId(data.contractId),
+            validateDescription(data.description),
+            validateQuantity(data.quantity),
+            validateNeedByDate(data.needByDate),
+            validateCompanyCode(data.companyCode),
+            validateGLAccount(data.glAccount),
+            validateCostCenter(data.costCenter),
+            validateIsSourcingPr(data.isSourcingPr)
+        ];
+
+        }
+
         const failed = validations.find(v => v.success === false);
 
         if (failed) {
@@ -44,27 +65,29 @@ module.exports = cds.service.impl(async function () {
     }
 
 
-    this.on('createAribaPurchaseRequisition', async (req) => {
-        try {
+    // this.on('createAribaPurchaseRequisition', async (req) => {
+    //     try {
 
-            runAllValidations(req.data);
+    //         runAllValidations(req.data);
 
-            return {
-                success: true,
-                requisitionId: crypto.randomUUID(),
-                status: "Created",
-                messages: ["Purchase Requisition Created"]
-            };
+    //         return {
+    //             success: true,
+    //             requisitionId: crypto.randomUUID(),
+    //             status: "Created",
+    //             messages: ["Purchase Requisition Created"]
+    //         };
 
-        } catch (error) {
-            return {
-                success: false,
-                requisitionId: null,
-                status: "Failed",
-                messages: [error.message || "Validation Failed"]
-            };
-        }
-    });
+    //     } catch (error) {
+    //         return {
+    //             success: false,
+    //             requisitionId: null,
+    //             status: "Failed",
+    //             messages: [error.message || "Validation Failed"]
+    //         };
+    //     }
+    // });
+
+
 
 
     // Tools
@@ -89,8 +112,121 @@ module.exports = cds.service.impl(async function () {
         companyCode: validateCompanyCode,
         glAccount: validateGLAccount,
         costCenter: validateCostCenter,
-        isSourcingPr: validateIsSourcingPr
+        isSourcingPr: validateIsSourcingPr,
+        contractId: validateContractId
     };
+
+
+    server.registerTool(
+        "createPrWithContract",
+        {
+            title: "Create Purchase Requisition with Contract",
+            description: `
+Creates a Purchase Requisition using a contract-based process.
+Executes only after all required input fields are successfully validated.
+    `,
+            inputSchema: {
+                requesterId: z.string(),
+                contractId: z.string(),
+                description: z.string().optional(),
+                quantity: z.number(),
+                needByDate: z.string(),
+                companyCode: z.string(),
+                glAccount: z.string(),
+                costCenter: z.string(),
+                isSourcingPr: z.boolean()
+            }
+        },
+        async (data) => {
+            try {
+
+                runAllValidations(data);
+
+                return {
+                    content: [{
+                        type: "text",
+                        text: JSON.stringify({
+                            success: true,
+                            requisitionId: crypto.randomUUID(),
+                            status: "Created",
+                            messages: ["Purchase Requisition Created using Contract"]
+                        }, null, 2)
+                    }]
+                };
+
+            } catch (error) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: JSON.stringify({
+                            success: false,
+                            requisitionId: null,
+                            status: "Failed",
+                            messages: [error.message || "Validation Failed"]
+                        }, null, 2)
+                    }],
+                    isError: true
+                };
+            }
+        }
+    );
+
+    server.registerTool(
+        "createPrWithQuotation",
+        {
+            title: "Create Purchase Requisition with Quotation",
+            description: `
+Creates a Purchase Requisition using a quotation-based process.
+Executes only after all required input fields are successfully validated.
+    `,
+            inputSchema: {
+                requesterId: z.string(),
+                productName: z.string(),
+                description: z.string().optional(),
+                quantity: z.number(),
+                price: z.number(),
+                currency: z.string(),
+                supplierId: z.string(),
+                needByDate: z.string(),
+                companyCode: z.string(),
+                glAccount: z.string(),
+                costCenter: z.string(),
+                isSourcingPr: z.boolean()
+            }
+        },
+        async (data) => {
+            try {
+
+                runAllValidations(data);
+
+                return {
+                    content: [{
+                        type: "text",
+                        text: JSON.stringify({
+                            success: true,
+                            requisitionId: crypto.randomUUID(),
+                            status: "Created",
+                            messages: ["Purchase Requisition Created using Quotation"]
+                        }, null, 2)
+                    }]
+                };
+
+            } catch (error) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: JSON.stringify({
+                            success: false,
+                            requisitionId: null,
+                            status: "Failed",
+                            messages: [error.message || "Validation Failed"]
+                        }, null, 2)
+                    }],
+                    isError: true
+                };
+            }
+        }
+    );
 
     server.registerTool(
         "validate_field",
@@ -107,7 +243,7 @@ Proceed only when all validations succeed.
                 value: z.any()
             }
         },
-        async ({ field, value, context }) => {
+        async ({ field, value }) => {
             const validator = validators[field];
 
             if (!validator) {
