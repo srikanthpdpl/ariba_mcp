@@ -21,39 +21,39 @@ const {
 
 module.exports = cds.service.impl(async function () {
 
-    function runAllValidations(data,type) {
+    function runAllValidations(data, type) {
         var validations = [];
 
-        if(type === 'quotation'){
+        if (type === 'quotation') {
             validations = [
-            validateRequesterId(data.requesterId),
-            validateProductName(data.productName),
-            validateDescription(data.description),
-            validateQuantity(data.quantity),
-            validatePrice(data.price),
-            validateCurrency(data.currency),
-            validateSupplierId(data.supplierId),
-            validateNeedByDate(data.needByDate),
-            validateCompanyCode(data.companyCode),
-            validateGLAccount(data.glAccount),
-            validateCostCenter(data.costCenter),
-            validateIsSourcingPr(data.isSourcingPr)
-        ];
+                validateRequesterId(data.requesterId),
+                validateProductName(data.productName),
+                validateDescription(data.description),
+                validateQuantity(data.quantity),
+                validatePrice(data.price),
+                validateCurrency(data.currency),
+                validateSupplierId(data.supplierId),
+                validateNeedByDate(data.needByDate),
+                validateCompanyCode(data.companyCode),
+                validateGLAccount(data.glAccount),
+                validateCostCenter(data.costCenter),
+                validateIsSourcingPr(data.isSourcingPr)
+            ];
 
         }
 
-        if(type === 'contract'){
+        if (type === 'contract') {
             validations = [
-            validateRequesterId(data.requesterId),
-            validateContractId(data.contractId),
-            validateDescription(data.description),
-            validateQuantity(data.quantity),
-            validateNeedByDate(data.needByDate),
-            validateCompanyCode(data.companyCode),
-            validateGLAccount(data.glAccount),
-            validateCostCenter(data.costCenter),
-            validateIsSourcingPr(data.isSourcingPr)
-        ];
+                validateRequesterId(data.requesterId),
+                validateContractId(data.contractId),
+                validateDescription(data.description),
+                validateQuantity(data.quantity),
+                validateNeedByDate(data.needByDate),
+                validateCompanyCode(data.companyCode),
+                validateGLAccount(data.glAccount),
+                validateCostCenter(data.costCenter),
+                validateIsSourcingPr(data.isSourcingPr)
+            ];
 
         }
 
@@ -64,28 +64,6 @@ module.exports = cds.service.impl(async function () {
         }
     }
 
-
-    // this.on('createAribaPurchaseRequisition', async (req) => {
-    //     try {
-
-    //         runAllValidations(req.data);
-
-    //         return {
-    //             success: true,
-    //             requisitionId: crypto.randomUUID(),
-    //             status: "Created",
-    //             messages: ["Purchase Requisition Created"]
-    //         };
-
-    //     } catch (error) {
-    //         return {
-    //             success: false,
-    //             requisitionId: null,
-    //             status: "Failed",
-    //             messages: [error.message || "Validation Failed"]
-    //         };
-    //     }
-    // });
 
 
 
@@ -98,23 +76,6 @@ module.exports = cds.service.impl(async function () {
         version: "1.0.0"
     });
 
-
-
-    const validators = {
-        requesterId: validateRequesterId,
-        productName: validateProductName,
-        description: validateDescription,
-        quantity: validateQuantity,
-        price: validatePrice,
-        currency: validateCurrency,
-        supplierId: validateSupplierId,
-        needByDate: validateNeedByDate,
-        companyCode: validateCompanyCode,
-        glAccount: validateGLAccount,
-        costCenter: validateCostCenter,
-        isSourcingPr: validateIsSourcingPr,
-        contractId: validateContractId
-    };
 
 
     server.registerTool(
@@ -228,51 +189,116 @@ Executes only after all required input fields are successfully validated.
         }
     );
 
-    server.registerTool(
-        "validate_field",
-        {
-            title: "Validate Purchase Requisition Field",
-            description: `
-Validate a single Purchase Requisition field.
-Use this tool before creating a Purchase Requisition.
-Validate each field independently.
-Proceed only when all validations succeed.
-    `,
-            inputSchema: {
-                field: z.enum(Object.keys(validators)),
-                value: z.any()
-            }
+
+    const fieldValidators = {
+        requesterId: {
+            title: "Validate Requester ID",
+            description: "Validate requester ID for Purchase Requisition",
+            schema: z.string(),
+            fn: validateRequesterId
         },
-        async ({ field, value }) => {
-            const validator = validators[field];
+        productName: {
+            title: "Validate Product Name",
+            description: "Validate product name for Purchase Requisition",
+            schema: z.string(),
+            fn: validateProductName
+        },
+        description: {
+            title: "Validate Description",
+            description: "Validate PR description",
+            schema: z.string().optional(),
+            fn: validateDescription
+        },
+        quantity: {
+            title: "Validate Quantity",
+            description: "Validate requested quantity",
+            schema: z.number(),
+            fn: validateQuantity
+        },
+        price: {
+            title: "Validate Price",
+            description: "Validate unit price",
+            schema: z.number(),
+            fn: validatePrice
+        },
+        currency: {
+            title: "Validate Currency",
+            description: "Validate currency code",
+            schema: z.string(),
+            fn: validateCurrency
+        },
+        supplierId: {
+            title: "Validate Supplier ID",
+            description: "Validate supplier ID",
+            schema: z.string(),
+            fn: validateSupplierId
+        },
+        needByDate: {
+            title: "Validate Need By Date",
+            description: "Validate need-by date",
+            schema: z.string(),
+            fn: validateNeedByDate
+        },
+        companyCode: {
+            title: "Validate Company Code",
+            description: "Validate company code",
+            schema: z.string(),
+            fn: validateCompanyCode
+        },
+        glAccount: {
+            title: "Validate GL Account",
+            description: "Validate GL account",
+            schema: z.string(),
+            fn: validateGLAccount
+        },
+        costCenter: {
+            title: "Validate Cost Center",
+            description: "Validate cost center",
+            schema: z.string(),
+            fn: validateCostCenter
+        },
+        isSourcingPr: {
+            title: "Validate Sourcing Flag",
+            description: "Validate sourcing PR flag",
+            schema: z.boolean(),
+            fn: validateIsSourcingPr
+        },
+        contractId: {
+            title: "Validate Contract ID",
+            description: "Validate contract ID",
+            schema: z.string(),
+            fn: validateContractId
+        }
+    };
 
-            if (!validator) {
-                return {
-                    content: [{
-                        type: "text",
-                        text: JSON.stringify({
-                            field,
-                            value,
-                            success: false,
-                            message: `No validator found for field ${field}`
-                        }, null, 2)
-                    }],
-                    isError: true
-                };
-            }
 
-            const result = validator(value)
+    Object.entries(fieldValidators).forEach(
+        ([field, config]) => {
+            server.registerTool(
+                `validate${field.charAt(0).toUpperCase()}${field.slice(1)}`,
+                {
+                    title: config.title,
+                    description: config.description,
+                    inputSchema: {
+                        value: config.schema
+                    }
+                },
+                async ({ value }) => {
+                    const result = config.fn(value);
 
-            return {
-                content: [{
-                    type: "text",
-                    text: JSON.stringify({
-                        field,
-                        value,
-                        ...result
-                    }, null, 2)
-                }]
-            };
+                    return {
+                        content: [{
+                            type: "text",
+                            text: JSON.stringify({
+                                field,
+                                value,
+                                ...result
+                            }, null, 2)
+                        }],
+                        isError: result.success === false
+                    };
+                }
+            );
         }
     );
 
