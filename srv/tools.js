@@ -3,6 +3,7 @@ const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
 const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
 const { z } = require("zod");
 // const { v4: uuidv4 } =  import('uuid');
+z.string().des
 const {
     validateRequesterId,
     validateProductName,
@@ -57,11 +58,19 @@ module.exports = cds.service.impl(async function () {
 
         }
 
-        const failed = validations.find(v => v.success === false);
+        const failed = validations.filter(v => v.success === false);
 
-        if (failed) {
-            throw new Error(failed.message);
+        if (failed.length > 0) {
+            return {
+                success: false,
+                errors: failed
+            };
         }
+
+        return {
+            success: true,
+            message: "All validations passed"
+        };
     }
 
 
@@ -84,24 +93,56 @@ module.exports = cds.service.impl(async function () {
             title: "Create Purchase Requisition with Contract",
             description: `
 Creates a Purchase Requisition using a contract-based process.
-Executes only after all required input fields are successfully validated.
+All input fields must already be valid. 
+Only provide values that satisfy validation rules.
     `,
             inputSchema: {
-                requesterId: z.string(),
-                contractId: z.string(),
-                description: z.string().optional(),
-                quantity: z.number(),
-                needByDate: z.string(),
-                companyCode: z.string(),
-                glAccount: z.string(),
-                costCenter: z.string(),
-                isSourcingPr: z.boolean()
+                requesterId: z
+                    .string()
+                    .describe("Validated requester email ID. Must be authorized and correctly formatted."),
+
+                contractId: z
+                    .string()
+                    .describe("Validated contract ID. Must exist and be approved for PR creation."),
+
+                description: z
+                    .string()
+                    .describe("Validated purchase description. Minimum 10 meaningful characters.")
+                    .optional(),
+
+                quantity: z
+                    .number()
+                    .describe("Validated quantity. Positive number within allowed limits."),
+
+                needByDate: z
+                    .string()
+                    .describe("Validated need-by date in ISO format (YYYY-MM-DD). Must not be in the past."),
+
+                companyCode: z
+                    .string()
+                    .describe("Validated company code. Must belong to allowed company codes."),
+
+                glAccount: z
+                    .string()
+                    .describe("Validated GL account. Must be allowed for posting."),
+
+                costCenter: z
+                    .string()
+                    .describe("Validated cost center responsible for the expense."),
+
+                isSourcingPr: z
+                    .boolean()
+                    .describe("Validated sourcing flag. Boolean value indicating sourcing relevance.")
+                    .optional()
             }
         },
         async (data) => {
             try {
+                const valid = runAllValidations(data, "contract");
 
-                runAllValidations(data);
+                if (!valid.success) {
+                    throw new Error(valid.errors.map(v => v.message).join("; "));
+                }
 
                 return {
                     content: [{
@@ -110,11 +151,10 @@ Executes only after all required input fields are successfully validated.
                             success: true,
                             requisitionId: crypto.randomUUID(),
                             status: "Created",
-                            messages: ["Purchase Requisition Created using Contract"]
+                            messages: ["Purchase Requisition created successfully using Contract"]
                         }, null, 2)
                     }]
                 };
-
             } catch (error) {
                 return {
                     content: [{
@@ -138,27 +178,68 @@ Executes only after all required input fields are successfully validated.
             title: "Create Purchase Requisition with Quotation",
             description: `
 Creates a Purchase Requisition using a quotation-based process.
-Executes only after all required input fields are successfully validated.
+All provided fields must already be validated.
+Only enter compliant and verified values.
     `,
             inputSchema: {
-                requesterId: z.string(),
-                productName: z.string(),
-                description: z.string().optional(),
-                quantity: z.number(),
-                price: z.number(),
-                currency: z.string(),
-                supplierId: z.string(),
-                needByDate: z.string(),
-                companyCode: z.string(),
-                glAccount: z.string(),
-                costCenter: z.string(),
-                isSourcingPr: z.boolean()
+                requesterId: z
+                    .string()
+                    .describe("Validated requester email ID. Must be authorized."),
+
+                productName: z
+                    .string()
+                    .describe("Validated product name. Must be supported by the system."),
+
+                description: z
+                    .string()
+                    .describe("Validated purchase description. Minimum 10 characters.")
+                    .optional(),
+
+                quantity: z
+                    .number()
+                    .describe("Validated quantity. Positive number within allowed range."),
+
+                price: z
+                    .number()
+                    .describe("Validated quoted price. Must be a positive numeric value."),
+
+                currency: z
+                    .string()
+                    .describe("Validated ISO currency code (e.g., USD, INR). Must be supported."),
+
+                supplierId: z
+                    .string()
+                    .describe("Validated supplier ID. Must be approved and supported."),
+
+                needByDate: z
+                    .string()
+                    .describe("Validated delivery date in ISO format (YYYY-MM-DD). Cannot be in the past."),
+
+                companyCode: z
+                    .string()
+                    .describe("Validated company code under which the PR is created."),
+
+                glAccount: z
+                    .string()
+                    .describe("Validated GL account for financial posting."),
+
+                costCenter: z
+                    .string()
+                    .describe("Validated cost center responsible for the expense."),
+
+                isSourcingPr: z
+                    .boolean()
+                    .describe("Validated sourcing flag. Boolean value only.")
+                    .optional()
             }
         },
         async (data) => {
             try {
+                const valid = runAllValidations(data, "quotation");
 
-                runAllValidations(data);
+                if (!valid.success) {
+                    throw new Error(valid.errors.map(v => v.message).join("; "));
+                }
 
                 return {
                     content: [{
@@ -167,11 +248,10 @@ Executes only after all required input fields are successfully validated.
                             success: true,
                             requisitionId: crypto.randomUUID(),
                             status: "Created",
-                            messages: ["Purchase Requisition Created using Quotation"]
+                            messages: ["Purchase Requisition created successfully using Quotation"]
                         }, null, 2)
                     }]
                 };
-
             } catch (error) {
                 return {
                     content: [{
@@ -190,119 +270,197 @@ Executes only after all required input fields are successfully validated.
     );
 
 
-    const fieldValidators = {
-        requesterId: {
-            title: "Validate Requester ID",
-            description: "Validate requester ID for Purchase Requisition",
-            schema: z.string(),
-            fn: validateRequesterId
+    server.registerTool(
+        "ValidatePrWithQuotation",
+        {
+            title: "Validate Purchase Requisition with Quotation",
+            description: `
+Validates a Purchase Requisition using a quotation-based process.
+    `,
+            inputSchema: {
+                requesterId: z
+                    .string()
+                    .describe("Email ID of the requester. Must be a valid and authorized email address."),
+
+                productName: z
+                    .string()
+                    .describe("Product name to be procured using a quotation. Must match supported product names."),
+
+                description: z
+                    .string()
+                    .describe("Detailed description of the purchase requirement. Minimum 10 characters.")
+                    .optional(),
+
+                quantity: z
+                    .number()
+                    .describe("Quantity requested. Must be a positive number within allowed limits."),
+
+                price: z
+                    .number()
+                    .describe("Quoted unit price of the product. Must be a positive numeric value."),
+
+                currency: z
+                    .string()
+                    .describe("3-letter ISO currency code used in the quotation (e.g., USD, INR). Must be supported."),
+
+                supplierId: z
+                    .string()
+                    .describe("Supplier ID providing the quotation. Must be selected from supported suppliers."),
+
+                needByDate: z
+                    .string()
+                    .describe("Required delivery date in ISO format (YYYY-MM-DD). Cannot be a past date."),
+
+                companyCode: z
+                    .string()
+                    .describe("Company code under which the PR is created. Must be a valid company code."),
+
+                glAccount: z
+                    .string()
+                    .describe("GL account for posting the purchase cost. Must be a supported GL account."),
+
+                costCenter: z
+                    .string()
+                    .describe("Cost center responsible for the expense. Must be a valid cost center."),
+
+                isSourcingPr: z
+                    .boolean()
+                    .describe("Indicates whether the PR is related to sourcing. Optional boolean flag.")
+                    .optional()
+            }
+
         },
-        productName: {
-            title: "Validate Product Name",
-            description: "Validate product name for Purchase Requisition",
-            schema: z.string(),
-            fn: validateProductName
-        },
-        description: {
-            title: "Validate Description",
-            description: "Validate PR description",
-            schema: z.string().optional(),
-            fn: validateDescription
-        },
-        quantity: {
-            title: "Validate Quantity",
-            description: "Validate requested quantity",
-            schema: z.number(),
-            fn: validateQuantity
-        },
-        price: {
-            title: "Validate Price",
-            description: "Validate unit price",
-            schema: z.number(),
-            fn: validatePrice
-        },
-        currency: {
-            title: "Validate Currency",
-            description: "Validate currency code",
-            schema: z.string(),
-            fn: validateCurrency
-        },
-        supplierId: {
-            title: "Validate Supplier ID",
-            description: "Validate supplier ID",
-            schema: z.string(),
-            fn: validateSupplierId
-        },
-        needByDate: {
-            title: "Validate Need By Date",
-            description: "Validate need-by date",
-            schema: z.string(),
-            fn: validateNeedByDate
-        },
-        companyCode: {
-            title: "Validate Company Code",
-            description: "Validate company code",
-            schema: z.string(),
-            fn: validateCompanyCode
-        },
-        glAccount: {
-            title: "Validate GL Account",
-            description: "Validate GL account",
-            schema: z.string(),
-            fn: validateGLAccount
-        },
-        costCenter: {
-            title: "Validate Cost Center",
-            description: "Validate cost center",
-            schema: z.string(),
-            fn: validateCostCenter
-        },
-        isSourcingPr: {
-            title: "Validate Sourcing Flag",
-            description: "Validate sourcing PR flag",
-            schema: z.boolean(),
-            fn: validateIsSourcingPr
-        },
-        contractId: {
-            title: "Validate Contract ID",
-            description: "Validate contract ID",
-            schema: z.string(),
-            fn: validateContractId
+        async (data) => {
+
+            const valid = runAllValidations(data, "quotation");
+
+            if (!valid.success) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: JSON.stringify({
+                            success: false,
+                            status: "Failed",
+                            messages: valid.errors
+                        }, null, 2)
+                    }],
+                    isError: true
+                };
+            }
+            else {
+                return {
+                    content: [{
+                        type: "text",
+                        text: JSON.stringify({
+                            success: true,
+                            status: "Validated",
+                            messages: valid?.message
+                        }, null, 2)
+                    }]
+                };
+
+            }
         }
-    };
+    );
 
+    server.registerTool(
+        "ValidatePrWithContract",
+        {
+            title: "Validate Purchase Requisition with Contract",
+            description: `
+Validates a Purchase Requisition using a contract-based process.
+    `,
+            inputSchema: {
+                requesterId: z
+                    .string()
+                    .describe("Email ID of the requester. Must be a valid and authorized email address."),
 
-    Object.entries(fieldValidators).forEach(
-        ([field, config]) => {
-            server.registerTool(
-                `validate${field.charAt(0).toUpperCase()}${field.slice(1)}`,
-                {
-                    title: config.title,
-                    description: config.description,
-                    inputSchema: {
-                        value: config.schema
-                    }
-                },
-                async ({ value }) => {
-                    const result = config.fn(value);
+                contractId: z
+                    .string()
+                    .describe("Contract ID against which the Purchase Requisition is created. Must be a valid contract identifier."),
 
-                    return {
-                        content: [{
-                            type: "text",
-                            text: JSON.stringify({
-                                field,
-                                value,
-                                ...result
-                            }, null, 2)
-                        }],
-                        isError: result.success === false
-                    };
-                }
-            );
+                productName: z
+                    .string()
+                    .describe("Product name to be procured. Must match one of the supported product names."),
+
+                description: z
+                    .string()
+                    .describe("Detailed description of the purchase requirement. Minimum 10 characters.")
+                    .optional(),
+
+                quantity: z
+                    .number()
+                    .describe("Quantity of the product requested. Must be greater than zero and within allowed limits."),
+
+                price: z
+                    .number()
+                    .describe("Unit price of the product. Must be a positive numeric value."),
+
+                currency: z
+                    .string()
+                    .describe("3-letter ISO currency code for the price (e.g., USD, INR). Must be supported."),
+
+                supplierId: z
+                    .string()
+                    .describe("Supplier identifier. Must be selected from supported suppliers."),
+
+                needByDate: z
+                    .string()
+                    .describe("Required delivery date in ISO format (YYYY-MM-DD). Cannot be in the past."),
+
+                companyCode: z
+                    .string()
+                    .describe("Company code under which the PR is created. Must be a valid company code."),
+
+                glAccount: z
+                    .string()
+                    .describe("GL account for posting the purchase cost. Must be a valid GL account."),
+
+                costCenter: z
+                    .string()
+                    .describe("Cost center responsible for the expense. Must be a valid cost center."),
+
+                isSourcingPr: z
+                    .boolean()
+                    .describe("Indicates whether the PR is related to sourcing. Optional boolean flag.")
+                    .optional()
+            }
+        },
+        async (data) => {
+
+            const valid = runAllValidations(data, "contract");
+
+            if (!valid.success) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: JSON.stringify({
+                            success: false,
+                            status: "Failed",
+                            messages: valid.errors
+                        }, null, 2)
+                    }],
+                    isError: true
+                };
+            }
+            else {
+                return {
+                    content: [{
+                        type: "text",
+                        text: JSON.stringify({
+                            success: true,
+                            status: "Validated",
+                            messages: valid?.message
+                        }, null, 2)
+                    }]
+                };
+
+            }
         }
     );
 
 
+  
 
 
     const transport = new StreamableHTTPServerTransport({});
