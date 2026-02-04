@@ -22,12 +22,12 @@ const {
 
 module.exports = cds.service.impl(async function () {
 
-    function runAllValidations(data, type) {
+    async function runAllValidations(data) {
         var validations = [];
-
+        const type = data.type;
         if (type === 'quotation') {
             validations = [
-                validateRequesterId(data.requesterId),
+               await validateRequesterId(data.requesterId),
                 validateProductName(data.productName),
                 validateDescription(data.description),
                 validateQuantity(data.quantity),
@@ -45,7 +45,7 @@ module.exports = cds.service.impl(async function () {
 
         if (type === 'contract') {
             validations = [
-                validateRequesterId(data.requesterId),
+               await validateRequesterId(data.requesterId),
                 validateContractId(data.contractId),
                 validateDescription(data.description),
                 validateQuantity(data.quantity),
@@ -74,8 +74,61 @@ module.exports = cds.service.impl(async function () {
     }
 
 
+    /*
+    this.on('createAribaPurchaseRequisition', async (req) => {
+        // try {
 
+        //     await runAllValidations(req.data);
 
+        //     return {
+        //         success: true,
+        //         requisitionId: crypto.randomUUID(),
+        //         status: "Created",
+        //         messages: ["Purchase Requisition Created"]
+        //     };
+
+        // } catch (error) {
+        //     return {
+        //         success: false,
+        //         requisitionId: null,
+        //         status: "Failed",
+        //         messages: [error.message || "Validation Failed"]
+        //     };
+        // }
+        try {
+                const valid = await runAllValidations(data, "contract");
+
+                if (!valid.success) {
+                    throw new Error(valid.errors.map(v => v.message).join("; "));
+                }
+
+                return {
+                    content: [{
+                        type: "text",
+                        text: JSON.stringify({
+                            success: true,
+                            requisitionId: crypto.randomUUID(),
+                            status: "Created",
+                            messages: ["Purchase Requisition created successfully using Contract"]
+                        }, null, 2)
+                    }]
+                };
+            } catch (error) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: JSON.stringify({
+                            success: false,
+                            requisitionId: null,
+                            status: "Failed",
+                            messages: [error.message || "Validation Failed"]
+                        }, null, 2)
+                    }],
+                    isError: true
+                };
+            }
+    });
+*/
 
     // Tools
     const app = cds.app;
@@ -138,7 +191,7 @@ Only provide values that satisfy validation rules.
         },
         async (data) => {
             try {
-                const valid = runAllValidations(data, "contract");
+                const valid = await runAllValidations(data, "contract");
 
                 if (!valid.success) {
                     throw new Error(valid.errors.map(v => v.message).join("; "));
@@ -235,7 +288,7 @@ Only enter compliant and verified values.
         },
         async (data) => {
             try {
-                const valid = runAllValidations(data, "quotation");
+                const valid = await runAllValidations(data, "quotation");
 
                 if (!valid.success) {
                     throw new Error(valid.errors.map(v => v.message).join("; "));
@@ -332,7 +385,7 @@ Validates a Purchase Requisition using a quotation-based process.
         },
         async (data) => {
 
-            const valid = runAllValidations(data, "quotation");
+            const valid = await runAllValidations(data, "quotation");
 
             if (!valid.success) {
                 return {
@@ -428,7 +481,7 @@ Validates a Purchase Requisition using a contract-based process.
         },
         async (data) => {
 
-            const valid = runAllValidations(data, "contract");
+            const valid = await runAllValidations(data, "contract");
 
             if (!valid.success) {
                 return {

@@ -1,10 +1,11 @@
-# CAP ariba_mcp
+# CAP ariba_mcp_sk
 _out
 *.db
 *.sqlite
 connection.properties
 default-*.json
 .cdsrc-private.json
+package-lock.json
 gen/
 node_modules/
 target/

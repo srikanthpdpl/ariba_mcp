@@ -12,6 +12,7 @@
   //   glAccount   : String,
   //   costCenter  : String,
   //   isSourcingPr: Boolean,
+  //   type        : String,
   // ) returns {
   //   success       : Boolean;
   //   requisitionId : String;

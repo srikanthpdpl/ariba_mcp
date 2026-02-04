@@ -1,9 +1,12 @@
 const cds = require('@sap/cds');
 const fetch = import('node-fetch');
 // const { v4: uuidv4 } = import('uuid');
-
+const { getUser, getContractIds, getCommodityCodes, getIncoTerms, getProducts, getCurrency,
+  getCompanyCodes, getSuppliers, getCostCenters, getPurchaseGroups, getAccountTypes,
+  getWBSElement, getGeneralLedgers, getUOMs, getAccounts, getPaymentTerms } = require('./apicalls');
 
 // validate.js
+
 
 // ---------- Hardcoded data ----------
 const allowedRequesterEmails = [
@@ -42,16 +45,26 @@ const allowedSuppliers = ["SUPP_1001", "SUPP_1002", "SUPP_2001", "SUPP_3005"];
 const allowedCompanyCodes = ["1000", "2000", "3000", "4000"];
 const allowedGLAccounts = ["500000", "500100", "500200", "600000"];
 const allowedCostCenters = ["CC100", "CC200", "CC300", "CC400"];
-const allowedContractIds = [
-  "CTR-1001",
-  "CTR-1002",
-  "CTR-1003",
-  "CTR-2001"
-];
+// const allowedContractIds = [
+//   "CTR-1001",
+//   "CTR-1002",
+//   "CTR-1003",
+//   "CTR-2001"
+// ];
 
 // ---------- Validators ----------
 
-function validateContractId(value) {
+async function validateContractId(value) {
+
+  console.log("...ValidateContract....")
+  var contractId = await getContractIds()
+// Step 2: Extract level-1 UniqueName into array
+const allowedContractIds = Array.isArray(contractId.value)
+  ? contractId.value
+      .map(item => item.UniqueName)
+      .filter(Boolean) // removes undefined/null just in case
+  : [];
+
   if (!value) {
     return {
       success: false,
@@ -59,7 +72,7 @@ function validateContractId(value) {
       message: "Contract ID is mandatory"
     };
   }
-
+  // const allowedContractIds = 
   if (!allowedContractIds.includes(value)) {
     return {
       success: false,
@@ -74,20 +87,75 @@ function validateContractId(value) {
   };
 }
 
-function validateRequesterId(value) {
-  if (!value) return { success: false, message: "Requester ID is mandatory" };
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(value)) {
-    return { success: false, message: "Requester ID must be a valid email address" };
+async function validateRequesterId(value) {
+  if (!value) {
+    return { success: false, message: "Requester ID is mandatory" };
   }
 
-  if (!allowedRequesterEmails.includes(value)) {
-    return { success: false, message: "Requester ID is not authorized" };
+  const userdata = await getUser(value);
+
+  // Validate user existence
+  if (!userdata || !Array.isArray(userdata.Resources) || userdata.Resources.length === 0) {
+    return { success: false, message: "Requester ID does not exist" };
   }
 
-  return { success: true, message: "Requester ID is valid" };
+  const user = userdata.Resources[0];
+  // console.log(user);
+  // Validate groups existence
+  if (!Array.isArray(user.groups) || user.groups.length === 0) {
+    return { success: false, message: "Requester ID has no group assigned" };
+  }
+
+  // Check if user belongs to required group
+  const REQUIRED_GROUP = "ZEP_ARB_BUYER_DOWNSTREAM";
+
+  const hasRequiredGroup =
+    Array.isArray(user.groups) &&
+    user.groups.some(group => group.value === REQUIRED_GROUP);
+
+  if (!hasRequiredGroup) {
+    console.log(
+      `User ${user.userName} does NOT belong to required group: ${REQUIRED_GROUP}`
+    );
+    return { success: false, message: `User ${user.userName} does NOT belong to required group: ${REQUIRED_GROUP}` }
+    // throw error / return response / notify user
+  } else {
+    console.log(
+      `User ${user.userName} belongs to required group: ${REQUIRED_GROUP}`
+    );
+    return { success: true, message: `User ${user.userName} belongs to required group: ${REQUIRED_GROUP}` }
+  }
+
+
+  // // Optional: Email authorization check
+  // if (!allowedRequesterEmails.includes(value)) {
+  //   return { success: false, message: "Requester ID is not authorized" };
+  // }
+
+  // return { success: true, message: "Requester ID is valid" };
 }
+
+
+function validateCompanyCode(value) {
+  if (!value) {
+    return {
+      success: false,
+      expectedValues: allowedCompanyCodes,
+      message: "Company code is mandatory"
+    };
+  }
+
+  if (!allowedCompanyCodes.includes(value)) {
+    return {
+      success: false,
+      expectedValues: allowedCompanyCodes,
+      message: "Company code is not valid"
+    };
+  }
+
+  return { success: true, message: "Company code is valid" };
+}
+
 
 function validateProductName(value) {
 
@@ -237,25 +305,6 @@ function validateNeedByDate(value) {
   return { success: true, message: "Need-by date is valid" };
 }
 
-function validateCompanyCode(value) {
-  if (!value) {
-    return {
-      success: false,
-      expectedValues: allowedCompanyCodes,
-      message: "Company code is mandatory"
-    };
-  }
-
-  if (!allowedCompanyCodes.includes(value)) {
-    return {
-      success: false,
-      expectedValues: allowedCompanyCodes,
-      message: "Company code is not valid"
-    };
-  }
-
-  return { success: true, message: "Company code is valid" };
-}
 
 function validateGLAccount(value) {
   if (!value) {

@@ -1,9 +1,10 @@
 _schema-version: 3.3.0
-ID: ariba_mcp
+ID: ariba_mcp_sk
 version: 1.0.0
 description: "A simple CAP project."
 parameters:
   enable-parallel-deployments: true
+  ariba-base-url: "https://eu.openapi.ariba.com"
 build-parameters:
   before-all:
     - builder: custom
@@ -11,9 +12,38 @@ build-parameters:
         - npm ci
         - npx cds build --production
 modules:
-  - name: ariba_mcp-srv
+  - name: ariba_mcp_sk-srv
     type: nodejs
     path: gen/srv
+    properties:
+      OAUTH_URL: "https://api-eu.ariba.com"
+      CLIENT_ID: "0fa811d9-4bee-43b3-a0b6-c88e97af7b6c"
+      CLIENT_SECRET: "7aMdwz1h8qT7bq3W5hoKojUCfrU4Zxu3"
+      XREALM: "EKATERRA-T"
+      XANID: "AN11072353778-T"
+      USERAPIKEY: "RTa9huiOH238wiQnrxcVFQwVgE6b3pmf"
+      APIKEY: "Jhs9yPQgBLCnd3WufYCT1Mi3fUFXN0HZ"
+
+      USERS_URL : "${ariba-base-url}/api/mds/v1/prod/scim/Users"
+
+      # Referencing the parameter defined at the top level
+      BASE_URL: "${ariba-base-url}"
+      COMMODITYCODES_URL: "${ariba-base-url}/commoditycodes"
+      PRODUCTS_URL: "${ariba-base-url}/products"
+      CURRENCY_URL: "${ariba-base-url}/currency"
+      COMPANYCODES_URL: "${ariba-base-url}/companycodes"
+      SUPPLIERS_URL: "${ariba-base-url}/suppliers"
+      COSTCENTERS_URL: "${ariba-base-url}/costcenters"
+      WBSELEMENT_URL: "${ariba-base-url}/wbselements"
+      GENERALLEDGERS_URL: "${ariba-base-url}/generalledgers"
+      UOMS_URL: "${ariba-base-url}/uoms"
+      INCOTERMS_URL: "${ariba-base-url}/incoterms"
+      PURCHASEGROUPS_URL: "${ariba-base-url}/purchasegroups"
+      ACCOUNTTYPES_URL: "${ariba-base-url}/accounttypes"
+      ACCOUNTS_URL: "${ariba-base-url}/accounts"
+      PAYMENTTERMS_URL: "${ariba-base-url}/paymentterms"
+      CONTRACTS_URL : "${ariba-base-url}/api/contract-compliance/v1/sandbox/contractRequests"
+
     parameters:
       instances: 1
       buildpack: nodejs_buildpack
@@ -24,10 +54,10 @@ modules:
         properties:
           srv-url: ${default-url}
     requires:   
-      - name: ariba_mcp-destination
+      - name: ariba_mcp_sk-destination
       
 resources:
-  - name: ariba_mcp-destination
+  - name: ariba_mcp_sk-destination
     type: org.cloudfoundry.managed-service
     parameters:
       service: destination
