@@ -22,9 +22,15 @@ const {
 
 module.exports = cds.service.impl(async function () {
 
-    async function runAllValidations(data) {
+    async function runAllValidations(data, p_type) {
         var validations = [];
-        const type = data.type;
+        var type;
+        if(p_type){
+            type = p_type;
+        }else{
+            type = data.type;
+        }
+        
         if (type === 'quotation') {
             validations = [
                await validateRequesterId(data.requesterId),
@@ -74,7 +80,7 @@ module.exports = cds.service.impl(async function () {
     }
 
 
-    /*
+    
     this.on('createAribaPurchaseRequisition', async (req) => {
         // try {
 
@@ -96,8 +102,8 @@ module.exports = cds.service.impl(async function () {
         //     };
         // }
         try {
-                const valid = await runAllValidations(data, "contract");
-
+                const valid = await runAllValidations(req.data, "quotation");
+                console.log(valid)
                 if (!valid.success) {
                     throw new Error(valid.errors.map(v => v.message).join("; "));
                 }
@@ -114,6 +120,7 @@ module.exports = cds.service.impl(async function () {
                     }]
                 };
             } catch (error) {
+                console.log(error)
                 return {
                     content: [{
                         type: "text",
@@ -128,7 +135,7 @@ module.exports = cds.service.impl(async function () {
                 };
             }
     });
-*/
+
 
     // Tools
     const app = cds.app;

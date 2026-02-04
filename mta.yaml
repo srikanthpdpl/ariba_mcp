@@ -16,7 +16,7 @@ modules:
     type: nodejs
     path: gen/srv
     properties:
-      OAUTH_URL: "https://api-eu.ariba.com"
+      OAUTH_URL: "https://api-eu.ariba.com/v2/oauth/token"
       CLIENT_ID: "0fa811d9-4bee-43b3-a0b6-c88e97af7b6c"
       CLIENT_SECRET: "7aMdwz1h8qT7bq3W5hoKojUCfrU4Zxu3"
       XREALM: "EKATERRA-T"
