@@ -4,6 +4,7 @@ const fetch = import('node-fetch');
 const { getUser, getContractIds, getCommodityCodes, getIncoTerms, getProducts, getCurrency,
   getCompanyCodes, getSuppliers, getCostCenters, getPurchaseGroups, getAccountTypes,
   getWBSElement, getGeneralLedgers, getUOMs, getAccounts, getPaymentTerms } = require('./apicalls');
+const { success } = require('zod');
 
 // validate.js
 
@@ -88,6 +89,7 @@ const allowedContractIds = Array.isArray(contractId.value)
 }
 
 async function validateRequesterId(value) {
+
   if (!value) {
     return { success: false, message: "Requester ID is mandatory" };
   }
@@ -136,26 +138,44 @@ async function validateRequesterId(value) {
 }
 
 
-function validateCompanyCode(value) {
+async function validateCompanyCode(value) {
+
   if (!value) {
-    return {
-      success: false,
-      expectedValues: allowedCompanyCodes,
-      message: "Company code is mandatory"
-    };
+    return { success: false, message: "Company Code is mandatory" };
   }
 
-  if (!allowedCompanyCodes.includes(value)) {
-    return {
-      success: false,
-      expectedValues: allowedCompanyCodes,
-      message: "Company code is not valid"
-    };
-  }
+  const companyCodes = await getCompanyCodes(value);
 
-  return { success: true, message: "Company code is valid" };
+  if(companyCodes.length>0){
+    return { success: true, message: "Company code is valid" };
+  } else{
+    return {success: false, message: "Company code is not valid" }
+  }
+  // return { success: true, message: "Company code is valid" };
 }
 
+async function validateSupplierId(value) {
+    if (!value) {
+      return { success: false, message: "Supplier ID is mandatory" };
+    }
+
+    const supplier = await getSuppliers(value);
+
+    if(supplier.length>0){
+      return { success: true, message: "Supplier ID is valid" };
+    } else{
+      return {success: false, message: "Supplier is not valid" }
+    }
+  // if (!allowedSuppliers.includes(value)) {
+  //   return {
+  //     success: false,
+  //     expectedValues: allowedSuppliers,
+  //     message: "Supplier ID is not valid"
+  //   };
+  // }
+
+  // return { success: true, message: "Supplier ID is valid" };
+}
 
 function validateProductName(value) {
 
@@ -208,7 +228,7 @@ function validateQuantity(value) {
   if (quantity <= 0) {
     return { success: false, message: "Quantity must be greater than zero" };
   }
-
+    ////// What will be the MAx Quantity ???
   const maxQty = 100;
   if (quantity > maxQty) {
     return {
@@ -238,7 +258,7 @@ function validatePrice(value) {
   return { success: true, message: "Price is valid", value: price };
 }
 
-function validateCurrency(value) {
+async function validateCurrency(value) {
   value = value ? value.toUpperCase() : value;
   if (!value) {
     return {
@@ -256,36 +276,26 @@ function validateCurrency(value) {
     };
   }
 
-  if (!allowedCurrencies.includes(value)) {
-    return {
-      success: false,
-      expectedValues: allowedCurrencies,
-      message: "Currency is not supported"
-    };
-  }
+    const currency = await getCurrency(value);
 
-  return { success: true, message: "Currency is valid" };
+    if(currency.length>0){
+      return { success: true, message: "Currency code is valid" };
+    } else{
+      return {success: false, message: "Currency code is not valid" }
+    }
+
+  // if (!allowedCurrencies.includes(value)) {
+  //   return {
+  //     success: false,
+  //     expectedValues: allowedCurrencies,
+  //     message: "Currency is not supported"
+  //   };
+  // }
+
+  // return { success: true, message: "Currency is valid" };
 }
 
-function validateSupplierId(value) {
-  if (!value) {
-    return {
-      success: false,
-      expectedValues: allowedSuppliers,
-      message: "Supplier ID is mandatory"
-    };
-  }
 
-  if (!allowedSuppliers.includes(value)) {
-    return {
-      success: false,
-      expectedValues: allowedSuppliers,
-      message: "Supplier ID is not valid"
-    };
-  }
-
-  return { success: true, message: "Supplier ID is valid" };
-}
 
 function validateNeedByDate(value) {
   if (!value) return { success: false, message: "Need-by date is mandatory" };
@@ -306,44 +316,57 @@ function validateNeedByDate(value) {
 }
 
 
-function validateGLAccount(value) {
+async function validateGLAccount(value,companyCode) {
   if (!value) {
     return {
       success: false,
-      expectedValues: allowedGLAccounts,
       message: "GL account is mandatory"
     };
   }
 
-  if (!allowedGLAccounts.includes(value)) {
-    return {
-      success: false,
-      expectedValues: allowedGLAccounts,
-      message: "GL account is not valid"
-    };
-  }
+    const glaccount = await getGeneralLedgers(value,companyCode);
+    console.log(glaccount)
+    if(glaccount.length>0){
+      return { success: true, message: "GL account is valid" };
+    } else{
+      return {success: false, message: `There is no GL accounts ${value} associated with the companycode ${companyCode}` }
+    }
+  // if (!allowedGLAccounts.includes(value)) {
+  //   return {
+  //     success: false,
+  //     expectedValues: allowedGLAccounts,
+  //     message: "GL account is not valid"
+  //   };
+  // }
 
-  return { success: true, message: "GL account is valid" };
+  // return { success: true, message: "GL account is valid" };
 }
 
-function validateCostCenter(value) {
+async function validateCostCenter(value,companyCode) {
   if (!value) {
     return {
       success: false,
-      expectedValues: allowedCostCenters,
       message: "Cost center is mandatory"
     };
   }
 
-  if (!allowedCostCenters.includes(value)) {
-    return {
-      success: false,
-      expectedValues: allowedCostCenters,
-      message: "Cost center is not valid"
-    };
-  }
+    const costcenter = await getCostCenters(value,companyCode);
+    console.log(costcenter)
+    if(costcenter.length>0){
+      return { success: true, message: "Cost Center is valid" };
+    } else{
+      return {success: false, message: `There is no CostCenter ${value} associated with the companycode ${companyCode}` }
+    }
 
-  return { success: true, message: "Cost center is valid" };
+  // if (!allowedCostCenters.includes(value)) {
+  //   return {
+  //     success: false,
+  //     expectedValues: allowedCostCenters,
+  //     message: "Cost center is not valid"
+  //   };
+  // }
+
+  // return { success: true, message: "Cost center is valid" };
 }
 
 function validateIsSourcingPr(value) {

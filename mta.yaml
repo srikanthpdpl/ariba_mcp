@@ -1,5 +1,5 @@
 _schema-version: 3.3.0
-ID: ariba_mcp_sk
+ID: ariba_pr_mcp
 version: 1.0.0
 description: "A simple CAP project."
 parameters:
@@ -12,7 +12,7 @@ build-parameters:
         - npm ci
         - npx cds build --production
 modules:
-  - name: ariba_mcp_sk-srv
+  - name: ariba_pr_mcp-srv
     type: nodejs
     path: gen/srv
     properties:
@@ -54,10 +54,10 @@ modules:
         properties:
           srv-url: ${default-url}
     requires:   
-      - name: ariba_mcp_sk-destination
+      - name: ariba_pr_mcp-destination
       
 resources:
-  - name: ariba_mcp_sk-destination
+  - name: ariba_pr_mcp-destination
     type: org.cloudfoundry.managed-service
     parameters:
       service: destination

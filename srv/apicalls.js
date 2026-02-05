@@ -1,6 +1,12 @@
 const cds = require('@sap/cds');
 const axios = require('axios');
 // require('dotenv').config();
+const dotenv = require('dotenv')
+const dotenvExpand = require('dotenv-expand');
+const { en } = require('zod/locales');
+
+const env = dotenv.config();
+dotenvExpand.expand(env);
 
 const tokenUrl = process.env.OAUTH_URL
 const clientId = process.env.CLIENT_ID
@@ -43,12 +49,12 @@ async function getAPIData(apiurl) {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
                 "X-Realm": x_realm,
-                apiKey: apikey
+                apiKey: apikey,
+                "Accept-Language": "en"
             }
         });
         return response.data;
     }
-
 }
 
 async function getUser(userID){
@@ -71,6 +77,14 @@ async function getUser(userID){
     }
 }
 
+async function getCompanyCodes(companycode) {
+    return await getAPIData(companycodes_url+`?$filter=UniqueName eq '${companycode}'`);
+}
+
+async function getSuppliers(supplierId) {
+    return await getAPIData(suppliers_url+`?$filter=UniqueName eq '${supplierId}'`);
+}
+
 async function getContractIds() {
     return await getAPIData(contract_url);
 }
@@ -80,23 +94,19 @@ async function getCommodityCodes() {
 async function getProducts() {
     return await getAPIData(products_url);
 }
-async function getCurrency() {
-    return await getAPIData(currency_url);
+async function getCurrency(currencycode) {
+    return await getAPIData(currency_url+`?$filter=UniqueName eq '${currencycode}'`);
 }
-async function getCompanyCodes() {
-    return await getAPIData(companycodes_url);
-}
-async function getSuppliers() {
-    return await getAPIData(suppliers_url);
-}
-async function getCostCenters() {
-    return await getAPIData(costcenters_url);
+
+
+async function getCostCenters(costcenter, companycode) {
+    return await getAPIData(costcenters_url+`?$filter=UniqueName eq '${costcenter  }' and CompanyCode eq '${companycode}'`);
 }
 async function getWBSElement() {
     return await getAPIData(wbselement_url);
 }
-async function getGeneralLedgers() {
-    return await getAPIData(generalledgers_url);
+async function getGeneralLedgers(glaccount, companycode) {
+    return await getAPIData(generalledgers_url+`?$filter=UniqueName eq '${glaccount}' and CompanyCode eq '${companycode}'`);
 }
 async function getUOMs() {
     return await getAPIData(uoms_url);

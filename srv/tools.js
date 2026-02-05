@@ -42,8 +42,8 @@ module.exports = cds.service.impl(async function () {
                 validateSupplierId(data.supplierId),
                 validateNeedByDate(data.needByDate),
                 validateCompanyCode(data.companyCode),
-                validateGLAccount(data.glAccount),
-                validateCostCenter(data.costCenter),
+                validateGLAccount(data.glAccount,data.companyCode),
+                validateCostCenter(data.costCenter,data.companyCode),
                 validateIsSourcingPr(data.isSourcingPr)
             ];
 
@@ -57,8 +57,8 @@ module.exports = cds.service.impl(async function () {
                 validateQuantity(data.quantity),
                 validateNeedByDate(data.needByDate),
                 validateCompanyCode(data.companyCode),
-                validateGLAccount(data.glAccount),
-                validateCostCenter(data.costCenter),
+                validateGLAccount(data.glAccount,data.companyCode),
+                validateCostCenter(data.costCenter,data.companyCode),
                 validateIsSourcingPr(data.isSourcingPr)
             ];
 
