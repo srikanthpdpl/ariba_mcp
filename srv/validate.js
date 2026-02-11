@@ -3,17 +3,17 @@ const fetch = import('node-fetch');
 // const { v4: uuidv4 } = import('uuid');
 const { getUser, getContractIds, getCommodityCodes, getIncoTerms, getProducts, getCurrency,
   getCompanyCodes, getSuppliers, getCostCenters, getPurchaseGroups, getAccountTypes,
-  getWBSElement, getGeneralLedgers, getUOMs, getAccounts, getPaymentTerms } = require('./apicalls');
-const { success } = require('zod');
+  getWBSElement, getGeneralLedgers, getUOMs, getAccounts, getPaymentTerms, callAribaRequisitionImportPull } = require('./apicalls');
+// const { success } = require('zod');
 
 // validate.js
 
 
 // ---------- Hardcoded data ----------
-const allowedRequesterEmails = [
-  "harish.yarra@aarini.com",
-  "akulapoornasasank@gmail.com"
-];
+// const allowedRequesterEmails = [
+//   "harish.yarra@aarini.com",
+//   "akulapoornasasank@gmail.com"
+// ];
 
 const allowedProducts = [
   "Laptop",
@@ -41,11 +41,11 @@ const productQuantityMap = {
   UPS: 6
 };
 
-const allowedCurrencies = ["USD", "INR"];
-const allowedSuppliers = ["SUPP_1001", "SUPP_1002", "SUPP_2001", "SUPP_3005"];
-const allowedCompanyCodes = ["1000", "2000", "3000", "4000"];
-const allowedGLAccounts = ["500000", "500100", "500200", "600000"];
-const allowedCostCenters = ["CC100", "CC200", "CC300", "CC400"];
+// const allowedCurrencies = ["USD", "INR"];
+// const allowedSuppliers = ["SUPP_1001", "SUPP_1002", "SUPP_2001", "SUPP_3005"];
+// const allowedCompanyCodes = ["1000", "2000", "3000", "4000"];
+// const allowedGLAccounts = ["500000", "500100", "500200", "600000"];
+// const allowedCostCenters = ["CC100", "CC200", "CC300", "CC400"];
 // const allowedContractIds = [
 //   "CTR-1001",
 //   "CTR-1002",
@@ -177,6 +177,9 @@ async function validateSupplierId(value) {
   // return { success: true, message: "Supplier ID is valid" };
 }
 
+
+/// Need to work on Product Logic.....
+// Validate aganist Material number...
 function validateProductName(value) {
 
   if (!value) {
@@ -206,15 +209,17 @@ function validateProductName(value) {
   };
 }
 
-function validateDescription(value) {
+// Validated against Material Desc 
+async function validateDescription(value) {
   if (!value) return { success: false, message: "Description is mandatory" };
-  if (value.trim().length < 10) {
-    return { success: false, message: "Description must contain at least 10 characters" };
-  }
+  // if (value.trim().length < 10) {
+  //   return { success: false, message: "Description must contain at least 10 characters" };
+  // }
   return { success: true, message: "Description is valid" };
 }
 
-function validateQuantity(value) {
+/// Need logic to check the MAX Quantity...?
+async function validateQuantity(value) {
   if (value === null || value === undefined || value === "") {
     return { success: false, message: "Quantity is mandatory" };
   }
@@ -229,18 +234,18 @@ function validateQuantity(value) {
     return { success: false, message: "Quantity must be greater than zero" };
   }
     ////// What will be the MAx Quantity ???
-  const maxQty = 100;
-  if (quantity > maxQty) {
-    return {
-      success: false,
-      message: "Requested quantity exceeds available stock"
-    };
-  }
+  // const maxQty = 100;
+  // if (quantity > maxQty) {
+  //   return {
+  //     success: false,
+  //     message: "Requested quantity exceeds available stock"
+  //   };
+  // }
 
   return { success: true, message: "Quantity is valid", value: quantity };
 }
 
-function validatePrice(value) {
+async function validatePrice(value) {
   if (value === null || value === undefined || value === "") {
     return { success: false, message: "Price is mandatory" };
   }
@@ -263,7 +268,6 @@ async function validateCurrency(value) {
   if (!value) {
     return {
       success: false,
-      expectedValues: allowedCurrencies,
       message: "Currency is mandatory"
     };
   }
@@ -271,7 +275,6 @@ async function validateCurrency(value) {
   if (!/^[A-Z]{3}$/.test(value)) {
     return {
       success: false,
-      expectedValues: allowedCurrencies,
       message: "Currency must be a valid ISO currency code"
     };
   }
@@ -297,7 +300,7 @@ async function validateCurrency(value) {
 
 
 
-function validateNeedByDate(value) {
+async function validateNeedByDate(value) {
   if (!value) return { success: false, message: "Need-by date is mandatory" };
 
   const date = new Date(value);
@@ -369,7 +372,7 @@ async function validateCostCenter(value,companyCode) {
   // return { success: true, message: "Cost center is valid" };
 }
 
-function validateIsSourcingPr(value) {
+async function validateIsSourcingPr(value) {
   if (value === undefined || value === null) {
     return { success: true, message: "Sourcing flag is valid" };
   }
@@ -381,128 +384,137 @@ function validateIsSourcingPr(value) {
   return { success: true, message: "Sourcing flag is valid" };
 }
 
+async function validateCommodityCode(value) {
+    if (!value) {
+      return { success: false, message: "CommodityCode is mandatory" };
+    }
 
+    const commoditycode= await getCommodityCodes(value);
 
-
-
-
-
-
-function buildRequisitionImportPullEnvelope(input) {
-  // const uniqueReqId = uuidv4();
-  const uniqueReqId = crypto.randomUUID();
-  const sourcingFlag = input.isSourcingPr ? 'true' : 'false';
-
-  return `
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:urn="urn:Ariba:Buyer:vsap">
-<soapenv:Header/>
-<soapenv:Body>
-<urn:RequisitionImportPullRequest partition="${escapeXml(ARIBA_REALM)}" variant="vrealm">
-<urn:Requisition_RequisitionImportPull>
-<urn:Requisition>
-<urn:UniqueName>${uniqueReqId}</urn:UniqueName>
-<urn:CreatorUserId>${escapeXml(input.requesterId)}</urn:CreatorUserId>
-<urn:NeedByDate>${escapeXml(input.needByDate)}</urn:NeedByDate>
-<urn:CompanyCode>${escapeXml(input.companyCode)}</urn:CompanyCode>
- 
-          <urn:LineItems>
-<urn:item>
-<urn:LineType>Material</urn:LineType>
-<urn:Description>
-<urn:Description>${escapeXml(input.productName)}</urn:Description>
-<urn:LongDescription>${escapeXml(input.description)}</urn:LongDescription>
-</urn:Description>
-<urn:Quantity>${input.quantity}</urn:Quantity>
-<urn:NeedByDate>${escapeXml(input.needByDate)}</urn:NeedByDate>
-<urn:Price>
-<urn:Amount>${input.price}</urn:Amount>
-<urn:Currency>
-<urn:UniqueName>${escapeXml(input.currency)}</urn:UniqueName>
-</urn:Currency>
-</urn:Price>
-<urn:Supplier>
-<urn:UniqueName>${escapeXml(input.supplierId)}</urn:UniqueName>
-</urn:Supplier>
-<urn:Accountings>
-<urn:item>
-<urn:GeneralLedger>
-<urn:UniqueName>${escapeXml(input.glAccount)}</urn:UniqueName>
-</urn:GeneralLedger>
-<urn:CostCenter>
-<urn:UniqueName>${escapeXml(input.costCenter)}</urn:UniqueName>
-</urn:CostCenter>
-</urn:item>
-</urn:Accountings>
-<urn:IsSourcingRequisition>${sourcingFlag}</urn:IsSourcingRequisition>
-</urn:item>
-</urn:LineItems>
-</urn:Requisition>
-</urn:Requisition_RequisitionImportPull>
-</urn:RequisitionImportPullRequest>
-</soapenv:Body>
-</soapenv:Envelope>
-`;
+    if(commoditycode.length>0){
+      return { success: true, message: "CommodityCode is valid" };
+    } else{
+      return {success: false, message: "CommodityCode is not valid" }
+    }
 }
 
-function escapeXml(v) {
-  return String(v)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/'/g, '&apos;')
-    .replace(/"/g, '&quot;');
+async function validateAttachments(value){
+    if (!value) {
+      return { success: false, message: "Attachments are mandatory" };
+    }
+    /// Code here for Attachment upload
 }
 
-// ===== Call Ariba =====
-async function callAribaRequisitionImportPull(soapEnvelope) {
-  const auth = Buffer.from(`${ARIBA_USERNAME}:${ARIBA_PASSWORD}`).toString('base64');
 
-  const resp = await fetch(ARIBA_REQUISITION_IMPORT_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'text/xml; charset=utf-8',
-      Authorization: `Basic ${auth}`,
-    },
-    body: soapEnvelope,
-  });
-
-  const text = await resp.text();
-  if (!resp.ok) {
-    throw new Error(`Ariba RequisitionImportPull error HTTP ${resp.status}: ${text}`);
-  }
-  return text;
+async function validateAccountAssignment(value){
+  if (!value) {
+      return { success: false, message: "Account Assignment is mandatory" };
+    }
+    /// code here for Account Assignment Validation
 }
 
-// ===== Parse SOAP response (simplified) =====
-function parseRequisitionImportPullResponse(xml) {
-  const messages = [];
+async function validateWBSElement(value){
+  if (!value) {
+      return { success: false, message: "WBSElement is mandatory" };
+    }
+    /// code here for 
+    const wbselement= await getWBSElement(value);
 
-  const faultMatch = xml.match(/<faultstring>(.*?)<\/faultstring>/);
-  if (faultMatch) {
-    messages.push(faultMatch[1]);
-    return { success: false, messages };
+    if(wbselement.length>0){
+      return { success: true, message: "WBSElement is valid" };
+    } else{
+      return {success: false, message: "WBSElement is not valid" }
+    }
+}
+
+async function validateUOM(value){
+    const uom= await getUOMs(value);
+
+    if(uom.length>0){
+      return { success: true, message: "UOM is valid" };
+    } else{
+      return {success: false, message: "UOM is not valid" }
+    }
+
+}
+
+function validateDeliverTo(value){
+
+}
+
+function validateOnBehalf(value){
+
+}
+
+function validatecontractWSId(value){
+
+}
+
+
+function validateShipTo(value){
+if (!value) return { success: false, message: "ShipTo is mandatory" };
+}
+
+function validateShipToAddress(value){
+if (!value) return { success: false, message: "ShipTo Address is mandatory" };
+}
+
+function validateServiceName(value){
+if (!value) return { success: false, message: "Service Name is mandatory" };
+
+}
+
+function validateServiceStartDate(value){
+    if (!value) return { success: false, message: "Service Start date is mandatory" };
+
+  const date = new Date(value);
+  if (isNaN(date.getTime())) {
+    return { success: false, message: "Service Start date must be a valid ISO date (YYYY-MM-DD)" };
   }
 
-  const idMatch = xml.match(/<UniqueName>(.*?)<\/UniqueName>/);
-  const statusMatch = xml.match(/<StatusString>(.*?)<\/StatusString>/);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  if (!idMatch) {
-    messages.push('No requisition ID returned from Ariba');
-    return { success: false, messages };
+  if (date < today) {
+    return { success: false, message: "Service Start date cannot be in the past" };
   }
 
-  return {
-    success: true,
-    requisitionId: idMatch[1],
-    status: statusMatch ? statusMatch[1] : 'UNKNOWN',
-    messages,
-  };
+  return { success: true, message: "Service Start date is valid" };
 }
+
+function validateServiceEndDate(value){
+    if (!value) return { success: false, message: "Service End date is mandatory" };
+
+  const date = new Date(value);
+  if (isNaN(date.getTime())) {
+    return { success: false, message: "Service End date must be a valid ISO date (YYYY-MM-DD)" };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (date < today) {
+    return { success: false, message: "Service End date cannot be in the past" };
+  }
+
+  return { success: true, message: "Service End date is valid" };
+}
+
+function validateExpectedAmount(value){
+if (!value) return { success: false, message: "Expected is mandatory" };
+
+}
+
+function callCreatePR(input){
+  console.log("calling .... callCreatePR")
+  return callAribaRequisitionImportPull(input)
+}
+
 
 // ---------- Exports ----------
 module.exports = {
   validateRequesterId,
+  validateCommodityCode,
   validateProductName,
   validateDescription,
   validateQuantity,
@@ -514,7 +526,23 @@ module.exports = {
   validateGLAccount,
   validateCostCenter,
   validateIsSourcingPr,
-  validateContractId
+  validateContractId,
+  validateAttachments,
+  validateAccountAssignment,
+  validateWBSElement,
+  validateUOM,
+  validateDeliverTo,
+  validateOnBehalf,
+  validatecontractWSId,
+  validateShipTo,
+  validateShipToAddress,
+  validateServiceName,
+  validateServiceStartDate,
+  validateServiceEndDate,
+  validateExpectedAmount,
+
+  callCreatePR
+
 };
 
 

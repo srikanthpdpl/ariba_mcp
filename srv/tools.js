@@ -6,6 +6,7 @@ const { z } = require("zod");
 z.string().des
 const {
     validateRequesterId,
+    validateCommodityCode,
     validateProductName,
     validateDescription,
     validateQuantity,
@@ -17,7 +18,21 @@ const {
     validateGLAccount,
     validateCostCenter,
     validateIsSourcingPr,
-    validateContractId
+    validateContractId,
+    validateAttachments,
+    validateAccountAssignment,
+    validateWBSElement,
+    validateUOM,
+    validateDeliverTo,
+    validateOnBehalf,
+    validatecontractWSId,
+    validateShipTo,
+    validateShipToAddress,
+    validateServiceName,
+    validateServiceStartDate,
+    validateServiceEndDate,
+    validateExpectedAmount,
+    callCreatePR
 } = require("./validate");
 
 module.exports = cds.service.impl(async function () {
@@ -25,45 +40,102 @@ module.exports = cds.service.impl(async function () {
     async function runAllValidations(data, p_type) {
         var validations = [];
         var type;
-        if(p_type){
+        if (p_type) {
             type = p_type;
-        }else{
+        } else {
             type = data.type;
         }
-        
+
         if (type === 'quotation') {
-            validations = [
-               await validateRequesterId(data.requesterId),
-                validateProductName(data.productName),
-                validateDescription(data.description),
-                validateQuantity(data.quantity),
-                validatePrice(data.price),
-                validateCurrency(data.currency),
-                validateSupplierId(data.supplierId),
-                validateNeedByDate(data.needByDate),
-                validateCompanyCode(data.companyCode),
-                validateGLAccount(data.glAccount,data.companyCode),
-                validateCostCenter(data.costCenter,data.companyCode),
-                validateIsSourcingPr(data.isSourcingPr)
-            ];
+            validations = await Promise.all([
+                /// Mandatory Fields
+                validateRequesterId(data.requesterId),
+                // validateProductName(data.productName),  /// Need to embedd logic
+                // validateDescription(data.description),
+                // validateQuantity(data.quantity), /// Need to embedd logic for product to Quantity
+                // validatePrice(data.price),
+                // validateCompanyCode(data.companyCode),
+                // validateSupplierId(data.supplierId),
+                // validateNeedByDate(data.needByDate),
+                // validateCommodityCode(data.commoditycode),
+                // validateAccountAssignment(data.accountAssignment),  // Validate Account Assignment
+                // validateCostCenter(data.costCenter, data.companyCode),
+                // validateAttachments(data.attachments),
+                // validateIsSourcingPr(data.isSourcingPr),
+
+                // //// Optional Fields
+                // validateUOM(data.uom), // validate UOM
+                // validateDeliverTo(data.deliveryto), // validate Delivery To
+                // validateOnBehalf(data.onbehalf), // validate on Behalf
+                // validatecontractWSId(data.contractId), // validate contract WorkspaceID
+                // validate Delay purchase until.  --- Not required ???
+
+                // inco terms -- No Validation
+                // inco terms location -- No validation
+
+                //// Auto Populated Fields
+                // Purchasing Unit
+                // Bill To
+                // Account Type
+                // GL Account 
+                // Ship To
+                // Material Group
+                // Payment Terms
+                // Contract
+                // validateCurrency(data.currency),  //// ???
+                // validateGLAccount(data.glAccount, data.companyCode), //????
+            ]);
 
         }
 
         if (type === 'contract') {
-            validations = [
-               await validateRequesterId(data.requesterId),
-                validateContractId(data.contractId),
-                validateDescription(data.description),
-                validateQuantity(data.quantity),
-                validateNeedByDate(data.needByDate),
+            validations = await Promise.all([
+                /// Mandatory Fields
+                validateRequesterId(data.requesterId),
                 validateCompanyCode(data.companyCode),
-                validateGLAccount(data.glAccount,data.companyCode),
-                validateCostCenter(data.costCenter,data.companyCode),
-                validateIsSourcingPr(data.isSourcingPr)
-            ];
+                validateShipTo(data.shipTo), //validate ship to
+                validateShipToAddress(data.shipToAddress),//validate ship to address
+                validateSupplierId(data.supplierId),
+                validateDeliverTo(data.deliveryto), //validate Deliver to
+                validateAttachments(data.attachments),  // attachments
+                validateServiceName(data.servicename), //validate Service name
+                validateDescription(data.description),
+                validateCommodityCode(data.commoditycode),
+                validateWBSElement(data.wbselement), //validate WBS Code/Element
+                validateAccountAssignment(data.accountAssignment),  // Validate Account Assignment
+                validateCostCenter(data.costCenter, data.companyCode),
+                validateServiceStartDate(data.srvstartdate),//validate Service Start Date
+                validateServiceEndDate(data.srvenddate),//validate Service End Date
+                validateNeedByDate(data.needByDate),
+                validateCurrency(data.currency),
+                validateExpectedAmount(data.expectedAmount),// validate Expected amount 
+                validateIsSourcingPr(data.isSourcingPr),
+
+                //// Optional Fields
+                //validate Max Amount
+                validatecontractWSId(data.contractId),//validate Contract WorkspaceID.
+                validateOnBehalf(data.onbehalf), // Validate on Behalf
+
+                
+                // supplier part number --- No Validation
+                // supplier part auxilary ID  --- No validation
+                // inco terms code  --- No Validation
+                // inco terms location --- No validation
+
+                // validate Delay purchase until.  --- Not required ???
+
+                //// Autopopulated Fields
+                // purchasing Organisation
+                // payment terms
+                // contract
+                // GL Account
+                // Bill to
+                // Account Type
+
+            ]);
 
         }
-
+        console.log(validations)
         const failed = validations.filter(v => v.success === false);
 
         if (failed.length > 0) {
@@ -79,61 +151,158 @@ module.exports = cds.service.impl(async function () {
         };
     }
 
-
-    
-    this.on('createAribaPurchaseRequisition', async (req) => {
-        // try {
-
-        //     await runAllValidations(req.data);
-
-        //     return {
-        //         success: true,
-        //         requisitionId: crypto.randomUUID(),
-        //         status: "Created",
-        //         messages: ["Purchase Requisition Created"]
-        //     };
-
-        // } catch (error) {
-        //     return {
-        //         success: false,
-        //         requisitionId: null,
-        //         status: "Failed",
-        //         messages: [error.message || "Validation Failed"]
-        //     };
-        // }
-        try {
-                const valid = await runAllValidations(req.data, "quotation");
-                console.log(valid)
-                if (!valid.success) {
-                    throw new Error(valid.errors.map(v => v.message).join("; "));
+    function constructInput()
+    {
+        return input = {
+            "Envelope": {
+                "Header": {
+                    "Headers": {
+                        "variant": "Production",
+                        "partition": "Realm_3521"
+                    }
+                },
+                "Body": {
+                    "RequisitionImportPullRequest": {
+                        "variant": "Production",
+                        "partition": "Realm_3521",
+                        "Requisition_RequisitionImportPull_Item": {
+                            "item": [
+                                {
+                                    "CompanyCode": {
+                                        "UniqueName": "3710"
+                                    },
+                                    "DefaultLineItem": {
+                                        "DeliverTo": "Raj",
+                                        "NeedBy": "2026-01-30T00:00:00Z"
+                                    },
+                                    "LineItems": {
+                                        "item": [
+                                            {
+                                                "BillingAddress": {
+                                                    "UniqueName": "3710"
+                                                },
+                                                "CommodityCode": {
+                                                    "UniqueName": "3710"
+                                                },
+                                                "Description": {
+                                                    "CommonCommodityCode": {
+                                                        "Domain": "custom",
+                                                        "UniqueName": "88.20.96.00"
+                                                    },
+                                                    "Description": "Indirect business services",
+                                                    "Price": {
+                                                        "Amount": 100,
+                                                        "Currency": {
+                                                            "UniqueName": "SGD"
+                                                        }
+                                                    },
+                                                    "UnitOfMeasure": {
+                                                        "UniqueName": "EA"
+                                                    }
+                                                },
+                                                "ImportedAccountCategoryStaging": {
+                                                    "UniqueName": "Opex"
+                                                },
+                                                "ImportedAccountingsStaging": {
+                                                    "SplitAccountings": {
+                                                        "item": [
+                                                            {
+                                                                "Account": {
+                                                                    "UniqueName": "0075400000"
+                                                                },
+                                                                "CostCenter": {
+                                                                    "UniqueName": "G370200003"
+                                                                },
+                                                                "GLAccount":{
+                                                                     "UniqueName": "0075400000"
+                                                                },
+                                                                "NumberInCollection": 1,
+                                                                "Percentage": 100,
+                                                                "ProcurementUnit": {
+                                                                    "UniqueName": "3710"
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                "ItemCategory": {
+                                                    "UniqueName": "M"
+                                                },
+                                                "NumberInCollection": 1,
+                                                "OriginatingSystemLineNumber": "1",
+                                                "PurchaseGroup": {
+                                                    "UniqueName": "003"
+                                                },
+                                                "PurchaseOrg": {
+                                                    "UniqueName": "3710"
+                                                },
+                                                "Quantity": 10,
+                                                "ShipTo": {
+                                                    "UniqueName": "3702"
+                                                },
+                                                "Supplier": {
+                                                    "UniqueName": "2010005421"
+                                                },
+                                                "SupplierLocation": {
+                                                    "UniqueName": "MAIN"
+                                                },
+                                                "ImportedNeedByStaging": "2026-01-30T00:00:00Z",
+                                                "ImportedDeliverToStaging": "Raj"
+                                            }
+                                        ]
+                                    },
+                                    "Name": "SOAP Test Ariba PR",
+                                    "OriginatingSystem": "EXT_SYSTEM",
+                                    "Preparer": {
+                                        "PasswordAdapter": "PasswordAdapter1",
+                                        "UniqueName": "SRIANTH"
+                                    },
+                                    "Requester": {
+                                        "PasswordAdapter": "PasswordAdapter1",
+                                        "UniqueName": "SRIANTH"
+                                    },
+                                    "UniqueName": "EXT-PR-100002"
+                                }
+                            ]
+                        }
+                    }
                 }
-
-                return {
-                    content: [{
-                        type: "text",
-                        text: JSON.stringify({
-                            success: true,
-                            requisitionId: crypto.randomUUID(),
-                            status: "Created",
-                            messages: ["Purchase Requisition created successfully using Contract"]
-                        }, null, 2)
-                    }]
-                };
-            } catch (error) {
-                console.log(error)
-                return {
-                    content: [{
-                        type: "text",
-                        text: JSON.stringify({
-                            success: false,
-                            requisitionId: null,
-                            status: "Failed",
-                            messages: [error.message || "Validation Failed"]
-                        }, null, 2)
-                    }],
-                    isError: true
-                };
             }
+        }
+    }
+
+
+    this.on('createAribaPurchaseRequisition', async (req) => {
+
+        try {
+            const valid = await runAllValidations(req.data, "quotation");
+            console.log(valid)
+            if (!valid.success) {
+                throw new Error(valid.errors.map(v => v.message).join("; "));
+            }
+
+            const inputjson = constructInput()
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify(await callCreatePR(inputjson))
+                }]
+            };
+        } catch (error) {
+            console.log(error)
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify({
+                        success: false,
+                        requisitionId: null,
+                        status: "Failed",
+                        messages: [error.message || "Validation Failed"]
+                    }, null, 2)
+                }],
+                isError: true
+            };
+        }
     });
 
 
@@ -204,15 +373,12 @@ Only provide values that satisfy validation rules.
                     throw new Error(valid.errors.map(v => v.message).join("; "));
                 }
 
+                /// Sample test run ...
+                const inputjson = constructInput()
                 return {
                     content: [{
                         type: "text",
-                        text: JSON.stringify({
-                            success: true,
-                            requisitionId: crypto.randomUUID(),
-                            status: "Created",
-                            messages: ["Purchase Requisition created successfully using Contract"]
-                        }, null, 2)
+                        text: JSON.stringify(await callCreatePR(inputjson))
                     }]
                 };
             } catch (error) {
@@ -301,15 +467,11 @@ Only enter compliant and verified values.
                     throw new Error(valid.errors.map(v => v.message).join("; "));
                 }
 
+                const inputjson = constructInput()
                 return {
                     content: [{
                         type: "text",
-                        text: JSON.stringify({
-                            success: true,
-                            requisitionId: crypto.randomUUID(),
-                            status: "Created",
-                            messages: ["Purchase Requisition created successfully using Quotation"]
-                        }, null, 2)
+                        text: JSON.stringify(await callCreatePR(inputjson))
                     }]
                 };
             } catch (error) {
@@ -329,7 +491,7 @@ Only enter compliant and verified values.
         }
     );
 
-
+/*
     server.registerTool(
         "ValidatePrWithQuotation",
         {
@@ -519,8 +681,8 @@ Validates a Purchase Requisition using a contract-based process.
         }
     );
 
+*/
 
-  
 
 
     const transport = new StreamableHTTPServerTransport({});

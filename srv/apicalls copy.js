@@ -43,6 +43,10 @@ const ARIBA_USERNAME = process.env.ARIBA_USERNAME
 const ARIBA_PASSWORD = process.env.ARIBA_PASSWORD
 const ARIBA_REQUISITION_IMPORT_URL = process.env.ARIBA_REQUISITION_IMPORT_URL
 
+// const tokenUrl = cds.env.OAUTH_URL;
+// const clientId = cds.env.CLIENT_ID;
+// const clientSecret = cds.env.CLIENT_SECRET;
+
 async function getAPIData(apiurl) {
   console.log(apiurl)
   const accessToken = await getAccessToken(); if (!accessToken) {
@@ -134,7 +138,9 @@ async function getUOMs(uom) {
 }
 
 async function getAccessToken() {
-
+  // console.log(tokenUrl)
+  // console.log(clientId)
+  // console.log(clientSecret)
   try {
     const response = await axios.post(
       tokenUrl,
@@ -173,6 +179,202 @@ function buildRequisitionImportPullEnvelope(input) {
   const sourcingFlag = input.isSourcingPr ? 'true' : 'false';
   const base64Content = fileToBase64('./files/sample.pdf');
   console.log('Running from:', __dirname);
+
+  //   return `
+  // <?xml version="1.0" encoding="UTF-8"?>
+  // <!DOCTYPE soapenv:Envelope SYSTEM "http://schemas.xmlsoap.org/soap/envelope/">
+  // <soapenv:Envelope
+  //   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+  //   xmlns:urn="urn:Ariba:Buyer:vsap">
+
+  //     <soapenv:Header>
+  //     <urn:Headers>
+  //       <urn:variant>Production</urn:variant>
+  //       <urn:partition>Realm_3521</urn:partition>
+  //     </urn:Headers>
+  //   </soapenv:Header>
+
+  //   ${escapeXml(ARIBA_REALM)} // for Strings
+  // ${uniqueReqId} // for numbers
+
+
+  // <soapenv:Body>
+  //     <urn:RequisitionImportPullRequest variant="Production" partition="Realm_3521">
+  //       <urn:Requisition_RequisitionImportPull_Item>
+  //         <urn:item>
+  //           <!-- Header level fields in schema order -->
+  //           <urn:CompanyCode>
+  //             <urn:UniqueName>3710</urn:UniqueName>
+  //           </urn:CompanyCode>
+
+  //           <urn:DefaultLineItem>
+  //             <urn:DeliverTo>Raj</urn:DeliverTo>
+  //             <urn:NeedBy>2026-01-30T00:00:00Z</urn:NeedBy>
+  //           </urn:DefaultLineItem>
+
+  //           <!-- Optional header comments can go here -->
+
+  //           <urn:LineItems>
+  //             <urn:item>
+  //               <!-- Line item fields (ReqLineItemDetails) -->
+  //               <urn:BillingAddress>
+  //                 <urn:UniqueName>3710</urn:UniqueName>
+  //               </urn:BillingAddress>
+
+  //               <urn:CommodityCode>
+  //                 <urn:UniqueName>3710</urn:UniqueName>
+  //               </urn:CommodityCode>
+
+  //               <urn:Description>
+  //                 <urn:CommonCommodityCode>
+  //                   <urn:Domain>custom</urn:Domain>
+  //                   <urn:UniqueName>88.20.96.00</urn:UniqueName>
+  //                 </urn:CommonCommodityCode>
+  //                 <urn:Description>Indirect business services</urn:Description>
+  //                 <urn:Price>
+  //                   <urn:Amount>100</urn:Amount>
+  //                   <urn:Currency>
+  //                     <urn:UniqueName>SGD</urn:UniqueName>
+  //                   </urn:Currency>
+  //                 </urn:Price>
+  //                 <urn:UnitOfMeasure>
+  //                   <urn:UniqueName>C2</urn:UniqueName>
+  //                 </urn:UnitOfMeasure>
+  //               </urn:Description>
+
+  //               <urn:ImportedAccountCategoryStaging>
+  //                 <urn:UniqueName>Opex</urn:UniqueName>
+  //               </urn:ImportedAccountCategoryStaging>
+
+  //               <urn:ImportedAccountingsStaging>
+  //                 <urn:SplitAccountings>
+  //                   <urn:item>
+  //                     <urn:Account>
+  //                       <urn:UniqueName>0075400000</urn:UniqueName>
+  //                     </urn:Account>
+  //                     <urn:CostCenter>
+  //                       <urn:UniqueName>G370200003</urn:UniqueName>
+  //                     </urn:CostCenter>
+  //                     <urn:NumberInCollection>1</urn:NumberInCollection>
+  //                     <urn:Percentage>100</urn:Percentage>
+  //                     <urn:ProcurementUnit>
+  //                       <urn:UniqueName>3710</urn:UniqueName>
+  //                     </urn:ProcurementUnit>
+  //                   </urn:item>
+  //                 </urn:SplitAccountings>
+  //               </urn:ImportedAccountingsStaging>
+
+  //               <urn:ItemCategory>
+  //                 <urn:UniqueName>Material</urn:UniqueName>
+  //               </urn:ItemCategory>
+
+  //               <urn:NumberInCollection>1</urn:NumberInCollection>
+  //               <urn:OriginatingSystemLineNumber>1</urn:OriginatingSystemLineNumber>
+
+  //               <urn:PurchaseGroup>
+  //                 <urn:UniqueName>003</urn:UniqueName>
+  //               </urn:PurchaseGroup>
+
+  //               <urn:PurchaseOrg>
+  //                 <urn:UniqueName>3710</urn:UniqueName>
+  //               </urn:PurchaseOrg>
+
+  //               <urn:Quantity>10</urn:Quantity>
+
+  //               <urn:ShipTo>
+  //                 <urn:UniqueName>3702</urn:UniqueName>
+  //               </urn:ShipTo>
+
+  //               <urn:Supplier>
+  //                 <urn:UniqueName>SU_INTERNAL86052967</urn:UniqueName>
+  //               </urn:Supplier>
+
+  //               <urn:SupplierLocation>
+  //                 <urn:UniqueName>MAIN</urn:UniqueName>
+  //               </urn:SupplierLocation>
+  //             <urn:ImportedNeedByStaging>2026-01-30T00:00:00Z</urn:ImportedNeedByStaging>
+  //             <urn:ImportedDeliverToStaging>Raj</urn:ImportedDeliverToStaging>
+
+  //             </urn:item>
+  //           </urn:LineItems>
+
+  //           <urn:Name>SOAP Test Ariba PR</urn:Name>
+
+  //           <urn:OriginatingSystem>EXT_SYSTEM</urn:OriginatingSystem>
+
+  //           <urn:Preparer>
+  //                         <!--You may enter the following 2 items in any order-->
+  //                         <urn:PasswordAdapter>PasswordAdapter1</urn:PasswordAdapter>
+  //                         <urn:UniqueName>${escapeXml(input.userID)}</urn:UniqueName>
+  //           </urn:Preparer>
+  //           <urn:Requester>
+  //                     <urn:PasswordAdapter>PasswordAdapter1</urn:PasswordAdapter>
+  //                     <urn:UniqueName>${escapeXml(input.userID)}</urn:UniqueName>
+  //           </urn:Requester>
+
+
+  //           <urn:UniqueName>${escapeXml(input.extPRID)}</urn:UniqueName>
+  //         </urn:item>
+  //       </urn:Requisition_RequisitionImportPull_Item>
+  //     </urn:RequisitionImportPullRequest>
+  //   </soapenv:Body>
+
+  //   <soapenv:Body>
+  //     <urn:RequisitionImportPullRequest
+  //         partition="${escapeXml(ARIBA_REALM)}"
+  //         variant="partition">
+
+  //       <urn:Requisition>
+  //         <urn:UniqueName>${uniqueReqId}</urn:UniqueName>
+  //         <urn:CreatorUserId>${escapeXml(input.requesterId)}</urn:CreatorUserId>
+  //         <urn:NeedByDate>${escapeXml(input.needByDate)}</urn:NeedByDate>
+  //         <urn:CompanyCode>
+  //           <urn:UniqueName>${escapeXml(input.companyCode)}</urn:UniqueName>
+  //         </urn:CompanyCode>
+
+  //         <urn:LineItems>
+  //           <urn:item>
+  //             <urn:LineType>Material</urn:LineType>
+
+  //             <urn:Description>
+  //               <urn:Description>${escapeXml(input.productName)}</urn:Description>
+  //               <urn:LongDescription>${escapeXml(input.description)}</urn:LongDescription>
+  //             </urn:Description>
+
+  //             <urn:Quantity>${input.quantity}</urn:Quantity>
+  //             <urn:NeedByDate>${escapeXml(input.needByDate)}</urn:NeedByDate>
+
+  //             <urn:Price>
+  //               <urn:Amount>${input.price}</urn:Amount>
+  //               <urn:Currency>
+  //                 <urn:UniqueName>${escapeXml(input.currency)}</urn:UniqueName>
+  //               </urn:Currency>
+  //             </urn:Price>
+
+  //             <urn:Supplier>
+  //               <urn:UniqueName>${escapeXml(input.supplierId)}</urn:UniqueName>
+  //             </urn:Supplier>
+
+  //             <urn:Accountings>
+  //               <urn:item>
+  //                 <urn:GeneralLedger>
+  //                   <urn:UniqueName>${escapeXml(input.glAccount)}</urn:UniqueName>
+  //                 </urn:GeneralLedger>
+  //                 <urn:CostCenter>
+  //                   <urn:UniqueName>${escapeXml(input.costCenter)}</urn:UniqueName>
+  //                 </urn:CostCenter>
+  //               </urn:item>
+  //             </urn:Accountings>
+
+  //             <urn:IsSourcingRequisition>${sourcingFlag}</urn:IsSourcingRequisition>
+  //           </urn:item>
+  //         </urn:LineItems>
+
+  //       </urn:Requisition>
+  //     </urn:RequisitionImportPullRequest>
+  //   </soapenv:Body>
+  // </soapenv:Envelope>
+  // `;
 
   return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
                   xmlns:urn="urn:Ariba:Buyer:vsap">
@@ -422,7 +624,6 @@ function escapeXml(v) {
     .replace(/"/g, '&quot;');
 }
 
-/*
 // ===== Call Ariba =====
 async function callAribaRequisitionImportPull(input) {
   const soapEnvelope = buildRequisitionImportPullEnvelope(input)
@@ -454,63 +655,6 @@ async function callAribaRequisitionImportPull(input) {
   //   return responseText;
 }
 
-*/
-
-const FormData = require('form-data');
-const crypto = require('crypto');
-
-async function callAribaRequisitionImportPull(input) {
-    const auth = Buffer.from(`${ARIBA_USERNAME}:${ARIBA_PASSWORD}`).toString('base64');
-    
-    // 1. Generate a unique Boundary and Content-ID
-    const boundary = "MIMEBoundary_" + crypto.randomBytes(16).toString('hex');
-    console.log(boundary)
-    const contentId = "sample.pdf";
-    
-    // 2. Build the MTOM-compliant XML Envelope
-    // NOTICE: We replace the Base64 string with an <xop:Include> reference
-    const soapEnvelope = buildRequisitionImportPullEnvelope(input).trim();
-
-    // 3. Construct the Multipart Body manually or via FormData
-    const filePath = path.resolve(__dirname, './files/sample.pdf');
-    const fileBuffer = fs.readFileSync(filePath);
-
-    // This is the raw HTTP body construction for MTOM
-    let body = `--${boundary}\r\n`;
-    body += `Content-Type: application/xop+xml; charset=UTF-8; type="text/xml"\r\n`;
-    body += `Content-Transfer-Encoding: 8bit\r\n`;
-    body += `Content-ID: <root.message@cxf.apache.org>\r\n\r\n`;
-    body += soapEnvelope + `\r\n`;
-    body += `--${boundary}\r\n`;
-    body += `Content-Type: application/pdf\r\n`;
-    body += `Content-Transfer-Encoding: binary\r\n`;
-    body += `Content-ID: <${contentId}>\r\n\r\n`;
-    
-    const footer = `\r\n--${boundary}--`;
-    const finalBody = Buffer.concat([Buffer.from(body), fileBuffer, Buffer.from(footer)]);
-  
-    console.log(finalBody.toString())
-    const response = await fetch(ARIBA_REQUISITION_IMPORT_URL, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Basic ${auth}`,
-            'Content-Type': `multipart/related; boundary="${boundary}"; type="application/xop+xml"; start="<root.message@cxf.apache.org>"; start-info="text/xml"`,
-            'SOAPAction': 'RequisitionImportPull'
-        },
-        body: finalBody
-    });
-
-  const responseText = await response.text();
-  // console.log(responseText)
-  if (!response.ok) {
-    throw new Error(
-      `Ariba SOAP HTTP ${response.status}\n${responseText}`
-    );
-  } else {
-    return parseRequisitionImportPullResponse(responseText)
-  }
-    // ... rest of your parsing logic
-}
 
 // ===== Parse SOAP response (simplified) =====
 function parseRequisitionImportPullResponse(xml) {

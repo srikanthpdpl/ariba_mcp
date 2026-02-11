@@ -1,4 +1,4 @@
-@server=http://localhost:4004
+@server=http://localhost:4003
 @username=alice
 @password=
 
@@ -38,7 +38,7 @@ Content-Type: application/json
 Authorization: Basic {{username}}:{{password}}
 
 {
-  "requesterId": "A.sadashiv@lipton.com",
+  "requesterId": "AFSHAN.AHMED@LIPTON.COM",
   "companyCode": "1000",
   "supplierId": "SU_INTERNAL86052967",
   "quantity": 19,

@@ -43,6 +43,9 @@ modules:
       ACCOUNTS_URL: "${ariba-base-url}/accounts"
       PAYMENTTERMS_URL: "${ariba-base-url}/paymentterms"
       CONTRACTS_URL : "${ariba-base-url}/api/contract-compliance/v1/sandbox/contractRequests"
+      ARIBA_USERNAME : "Santosh.Lokhande@lipton.com"
+      ARIBA_PASSWORD : "Danfug-mecso9-ruvrom"
+      ARIBA_REQUISITION_IMPORT_URL : "https://s1-eu.ariba.com/Buyer/soap/EKATERRA1-T/RequisitionImportPull"
 
     parameters:
       instances: 1
