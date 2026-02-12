@@ -169,13 +169,14 @@ function fileToBase64(relativeFilePath) {
 }
 
 function buildRequisitionImportPullEnvelope(input) {
-  const uniqueReqId = crypto.randomUUID();
-  const sourcingFlag = input.isSourcingPr ? 'true' : 'false';
-  const base64Content = fileToBase64('./files/sample.pdf');
-  console.log('Running from:', __dirname);
+  // const uniqueReqId = crypto.randomUUID();
+  // const sourcingFlag = input.isSourcingPr ? 'true' : 'false';
+  // const base64Content = fileToBase64('./files/sample.pdf');
+  // console.log('Running from:', __dirname);
 
   return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:urn="urn:Ariba:Buyer:vsap">
+                  xmlns:urn="urn:Ariba:Buyer:vsap"
+                  xmlns:xop="http://www.w3.org/2004/08/xop/include">
   <soapenv:Header>
     <urn:Headers>
       <urn:variant>${escapeXml(input.Envelope.Header.Headers.variant)}</urn:variant>
@@ -206,16 +207,16 @@ function buildRequisitionImportPullEnvelope(input) {
 
           <urn:item>
             <urn:Attachment>
-              <urn:ContentType>text/plain</urn:ContentType>
-              <urn:Filename>HeaderAttach.txt</urn:Filename>
-              <urn:Content>${base64Content}</urn:Content>
+              <urn:ContentType>application/pdf</urn:ContentType>
+              <urn:Filename>sample.pdf</urn:Filename>
+              <xop:Include href="cid:sample.pdf@ariba.com"/>
             </urn:Attachment>
             <urn:Date>2021-06-16T07:39:46Z</urn:Date>
             <urn:ExternalAttachment>false</urn:ExternalAttachment>
-            <urn:MappedFilename>cid:sample.pdf</urn:MappedFilename>
-            <urn:User>
-              <urn:PasswordAdapter>PasswordAdapter1</urn:PasswordAdapter>
-              <urn:UniqueName>smith</urn:UniqueName>
+              <urn:MappedFilename>cid:sample.pdf@ariba.com</urn:MappedFilename>
+              <urn:User>
+              <urn:PasswordAdapter>${escapeXml(input.Envelope.Body.RequisitionImportPullRequest.Requisition_RequisitionImportPull_Item.item[0].Requester.PasswordAdapter)}</urn:PasswordAdapter>
+              <urn:UniqueName>${escapeXml(input.Envelope.Body.RequisitionImportPullRequest.Requisition_RequisitionImportPull_Item.item[0].Requester.UniqueName)}</urn:UniqueName>
             </urn:User>
           </urn:item>
 
@@ -464,8 +465,9 @@ async function callAribaRequisitionImportPull(input) {
     
     // 1. Generate a unique Boundary and Content-ID
     const boundary = "MIMEBoundary_" + crypto.randomBytes(16).toString('hex');
-    console.log(boundary)
-    const contentId = "sample.pdf";
+    // console.log(boundary)
+    // const contentId = "sample.pdf";
+    const contentId = "sample.pdf@ariba.com";
     
     // 2. Build the MTOM-compliant XML Envelope
     // NOTICE: We replace the Base64 string with an <xop:Include> reference
@@ -488,8 +490,9 @@ async function callAribaRequisitionImportPull(input) {
     
     const footer = `\r\n--${boundary}--`;
     const finalBody = Buffer.concat([Buffer.from(body), fileBuffer, Buffer.from(footer)]);
-  
-    console.log(finalBody.toString())
+
+    const base64Content = fileToBase64('./files/sample.pdf'); ///need to remove 
+    console.log(body, '\r\n\n', base64Content, '\r\n\n', footer )
     const response = await fetch(ARIBA_REQUISITION_IMPORT_URL, {
         method: 'POST',
         headers: {
@@ -501,7 +504,7 @@ async function callAribaRequisitionImportPull(input) {
     });
 
   const responseText = await response.text();
-  // console.log(responseText)
+  console.log(responseText)
   if (!response.ok) {
     throw new Error(
       `Ariba SOAP HTTP ${response.status}\n${responseText}`
