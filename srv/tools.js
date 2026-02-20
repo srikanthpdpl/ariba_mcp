@@ -6,34 +6,45 @@ const { z } = require("zod");
 z.string().des
 const {
     validateRequesterId,
-    validateCommodityCode,
-    validateProductName,
+    validateCompanyCode,
+    validateAddress,
+    // validateShipTo,
+    validateSupplierId,
+    validateDeliverTo,
+    validateAttachments,
+    // validateProductName,
     validateDescription,
+    validateCommodityCode,
+    validateNeedByDate,
+    validateCurrency,
     validateQuantity,
     validatePrice,
-    validateCurrency,
-    validateSupplierId,
-    validateNeedByDate,
-    validateCompanyCode,
-    validateGLAccount,
-    validateCostCenter,
-    validateIsSourcingPr,
-    validateContractId,
-    validateAttachments,
-    validateAccountAssignment,
-    validateWBSElement,
+    validateItemCategory,
     validateUOM,
-    validateDeliverTo,
-    validateOnBehalf,
+    validateWBSElement,
+    validateGLAccount,
+    validateAccountAssignment,
+    validateCostCenter,
     validatecontractWSId,
-    validateShipTo,
-    validateShipToAddress,
+    validateComments,
+    validateOnBehalf,
+    validateSupplierPartNo,
+    validateSupplierPartAuxId,
+    validateIncoTermCode,
+    validateIncoTermLocation,
+    validateDelayPurchaseUntil,
+    validatePurchaseGroup,
+    validateIsSourcingPr,
+
     validateServiceName,
     validateServiceStartDate,
     validateServiceEndDate,
+    validateMaxAmount,
     validateExpectedAmount,
+    
     callCreatePR
 } = require("./validate");
+const { startAuthorization } = require('@modelcontextprotocol/sdk/client/auth.js');
 
 module.exports = cds.service.impl(async function () {
 
@@ -50,87 +61,84 @@ module.exports = cds.service.impl(async function () {
             validations = await Promise.all([
                 /// Mandatory Fields
                 validateRequesterId(data.requesterId),
-                // validateProductName(data.productName),  /// Need to embedd logic
-                // validateDescription(data.description),
-                // validateQuantity(data.quantity), /// Need to embedd logic for product to Quantity
-                // validatePrice(data.price),
-                // validateCompanyCode(data.companyCode),
-                // validateSupplierId(data.supplierId),
-                // validateNeedByDate(data.needByDate),
-                // validateCommodityCode(data.commoditycode),
-                // validateAccountAssignment(data.accountAssignment),  // Validate Account Assignment
-                // validateCostCenter(data.costCenter, data.companyCode),
-                // validateAttachments(data.attachments),
-                // validateIsSourcingPr(data.isSourcingPr),
+                validateCompanyCode(data.CompanyCode),
+                validateAddress("ShipTo",data.ShipTo,data.CompanyCode),
+                validateSupplierId(data.Supplier),
+                validateAddress("DeliveryTo",data.DeliveryTo,data.CompanyCode),
+                validateAddress("BillTo",data.BillingAddress,data.CompanyCode),
+                validateAttachments(data.attachments),  //check Attachment is available
+                // validateProductName(""),
+                validateDescription(data.Description),
+                validateCommodityCode(data.CommodityCode),
+                validateNeedByDate(data.NeedBy),
+                validateCurrency(data.Currency),
+                validateQuantity(data.Quantity),
+                validatePrice(data.Amount),
+                validateItemCategory(data.ItemCategory),
+                validateUOM(data.UnitOfMeasure),
+                ///WBS Element????
+                //validateAccountAssignment(data.ImportedAccountCategoryStaging),  if Account type Costcenter then Costcenter Validation, else WBSElement Validation
+                validateCostCenter(data.CostCenter, data.CompanyCode),
+                validateWBSElement(data.WBSCode, data.CompanyCode), // Validate WBS Code...
+                // validateGLAccount(data.GLAccount, data.CompanyCode),
+                // validateIsSourcingPr(data.isSourcingPr),  //?? 
 
-                // //// Optional Fields
-                // validateUOM(data.uom), // validate UOM
-                // validateDeliverTo(data.deliveryto), // validate Delivery To
-                // validateOnBehalf(data.onbehalf), // validate on Behalf
-                // validatecontractWSId(data.contractId), // validate contract WorkspaceID
-                // validate Delay purchase until.  --- Not required ???
-
-                // inco terms -- No Validation
-                // inco terms location -- No validation
-
-                //// Auto Populated Fields
-                // Purchasing Unit
-                // Bill To
-                // Account Type
-                // GL Account 
-                // Ship To
-                // Material Group
-                // Payment Terms
-                // Contract
-                // validateCurrency(data.currency),  //// ???
-                // validateGLAccount(data.glAccount, data.companyCode), //????
+                //// Optional Fields
+                validatecontractWSId(data.contractId), // validate contract WorkspaceID
+                validateOnBehalf(data.Requester), // validate on Behalf
+                validateComments(data.Comments),
+                validateSupplierPartNo(data.SupplierPartNo),
+                validateSupplierPartAuxId(data.SupplierPartAuxId),
+                validateIncoTermCode(data.IncoTermCode),
+                validateIncoTermLocation(data.IncoTermLocation),
+                validateDelayPurchaseUntil(data.PurchaseUntil),
+                validatePurchaseGroup(data.PurchaseGroup),
+                validateIsSourcingPr(data.IsSourcingPr)
             ]);
 
         }
 
         if (type === 'contract') {
             validations = await Promise.all([
-                /// Mandatory Fields
                 validateRequesterId(data.requesterId),
-                validateCompanyCode(data.companyCode),
-                validateShipTo(data.shipTo), //validate ship to
-                validateShipToAddress(data.shipToAddress),//validate ship to address
-                validateSupplierId(data.supplierId),
-                validateDeliverTo(data.deliveryto), //validate Deliver to
-                validateAttachments(data.attachments),  // attachments
-                validateServiceName(data.servicename), //validate Service name
-                validateDescription(data.description),
-                validateCommodityCode(data.commoditycode),
-                validateWBSElement(data.wbselement), //validate WBS Code/Element
-                validateAccountAssignment(data.accountAssignment),  // Validate Account Assignment
-                validateCostCenter(data.costCenter, data.companyCode),
-                validateServiceStartDate(data.srvstartdate),//validate Service Start Date
-                validateServiceEndDate(data.srvenddate),//validate Service End Date
-                validateNeedByDate(data.needByDate),
-                validateCurrency(data.currency),
-                validateExpectedAmount(data.expectedAmount),// validate Expected amount 
-                validateIsSourcingPr(data.isSourcingPr),
+                validateCompanyCode(data.CompanyCode),
+                validateAddress("ShipTo",data.ShipTo,data.CompanyCode),
+                validateSupplierId(data.Supplier),
+                validateAddress("DeliveryTo",data.DeliveryTo,data.CompanyCode),
+                validateAddress("BillTo",data.BillingAddress,data.CompanyCode),
+                validateAttachments(data.attachments),   //check Attachment is available
+                // validateProductName(""),
+                validateDescription(data.Description),
+                validateCommodityCode(data.CommodityCode),
+                validateNeedByDate(data.NeedBy),
+                validateCurrency(data.Currency),
+                validateQuantity(data.Quantity),
+                validatePrice(data.Amount),
+                validateItemCategory(data.ItemCategory),
+                validateUOM(data.UnitOfMeasure),
+                ///WBS Element????
+                //validateAccountAssignment(data.ImportedAccountCategoryStaging),  if Account type Costcenter then Costcenter Validation, else WBSElement Validation
+                validateCostCenter(data.CostCenter, data.CompanyCode),
+                validateWBSElement(data.WBSCode, data.CompanyCode), // Validate WBS Code...
+                // validateGLAccount(data.GLAccount, data.CompanyCode),
+                // validateIsSourcingPr(data.isSourcingPr),  //?? 
+                validateServiceName(""),  // Service Name...???
+                validateServiceStartDate(data.ServiceStartDate),
+                validateServiceEndDate(data.ServiceEndDate),
+                validateMaxAmount(data.MaxAmount),
+                validateExpectedAmount(data.ExpectedAmount),
 
                 //// Optional Fields
-                //validate Max Amount
-                validatecontractWSId(data.contractId),//validate Contract WorkspaceID.
-                validateOnBehalf(data.onbehalf), // Validate on Behalf
-
-                
-                // supplier part number --- No Validation
-                // supplier part auxilary ID  --- No validation
-                // inco terms code  --- No Validation
-                // inco terms location --- No validation
-
-                // validate Delay purchase until.  --- Not required ???
-
-                //// Autopopulated Fields
-                // purchasing Organisation
-                // payment terms
-                // contract
-                // GL Account
-                // Bill to
-                // Account Type
+                validatecontractWSId(data.contractId), // validate contract WorkspaceID
+                validateOnBehalf(data.Requester), // validate on Behalf
+                validateComments(data.Comments),
+                validateSupplierPartNo(data.SupplierPartNo),
+                validateSupplierPartAuxId(data.SupplierPartAuxId),
+                validateIncoTermCode(data.IncoTermCode),
+                validateIncoTermLocation(data.IncoTermLocation),
+                validateDelayPurchaseUntil(data.PurchaseUntil),
+                validatePurchaseGroup(data.PurchaseGroup),
+                validateIsSourcingPr(data.IsSourcingPr)
 
             ]);
 
@@ -151,8 +159,7 @@ module.exports = cds.service.impl(async function () {
         };
     }
 
-    function constructInput()
-    {
+    function constructInput(data) {
         return input = {
             "Envelope": {
                 "Header": {
@@ -169,99 +176,105 @@ module.exports = cds.service.impl(async function () {
                             "item": [
                                 {
                                     "CompanyCode": {
-                                        "UniqueName": "3710"
+                                        "UniqueName": data.CompanyCode
                                     },
                                     "DefaultLineItem": {
-                                        "DeliverTo": "Raj",
-                                        "NeedBy": "2026-01-30T00:00:00Z"
+                                        "DeliverTo": data.DeliverTo,
+                                        "NeedBy": data.NeedBy
                                     },
                                     "LineItems": {
                                         "item": [
                                             {
                                                 "BillingAddress": {
-                                                    "UniqueName": "3710"
+                                                    "UniqueName": data.BillingAddress
                                                 },
                                                 "CommodityCode": {
-                                                    "UniqueName": "3710"
+                                                    "UniqueName": data.CommodityCode
                                                 },
                                                 "Description": {
                                                     "CommonCommodityCode": {
                                                         "Domain": "custom",
-                                                        "UniqueName": "88.20.96.00"
+                                                        "UniqueName": data.CommodityCode
                                                     },
-                                                    "Description": "Indirect business services",
+                                                    "Description": data.Description,
                                                     "Price": {
-                                                        "Amount": 100,
+                                                        "Amount": data.Amount,
                                                         "Currency": {
-                                                            "UniqueName": "SGD"
+                                                            "UniqueName": data.Currency
                                                         }
                                                     },
                                                     "UnitOfMeasure": {
-                                                        "UniqueName": "EA"
+                                                        "UniqueName": data.UnitOfMeasure
                                                     }
                                                 },
                                                 "ImportedAccountCategoryStaging": {
-                                                    "UniqueName": "Opex"
+                                                    "UniqueName": data.ImportedAccountCategoryStaging
                                                 },
                                                 "ImportedAccountingsStaging": {
                                                     "SplitAccountings": {
                                                         "item": [
                                                             {
                                                                 "Account": {
-                                                                    "UniqueName": "0075400000"
+                                                                    "UniqueName": data.Account
                                                                 },
                                                                 "CostCenter": {
-                                                                    "UniqueName": "G370200003"
+                                                                    "UniqueName": data.CostCenter
                                                                 },
-                                                                "GLAccount":{
-                                                                     "UniqueName": "0075400000"
+                                                                "GLAccount": {
+                                                                    "UniqueName": data.GLAccount
                                                                 },
-                                                                "NumberInCollection": 1,
-                                                                "Percentage": 100,
+                                                                "NumberInCollection": data.NumberInCollection,
+                                                                "Percentage": data.Percentage,
                                                                 "ProcurementUnit": {
-                                                                    "UniqueName": "3710"
+                                                                    "UniqueName": data.ProcurementUnit
                                                                 }
                                                             }
                                                         ]
                                                     }
                                                 },
                                                 "ItemCategory": {
-                                                    "UniqueName": "M"
+                                                    "UniqueName": data.ItemCategory
                                                 },
-                                                "NumberInCollection": 1,
-                                                "OriginatingSystemLineNumber": "1",
+                                                "NumberInCollection": data.NumberInCollection,
+                                                "OriginatingSystemLineNumber": data.OriginatingSystemLineNumber,
                                                 "PurchaseGroup": {
-                                                    "UniqueName": "003"
+                                                    "UniqueName": data.PurchaseGroup
                                                 },
                                                 "PurchaseOrg": {
-                                                    "UniqueName": "3710"
+                                                    "UniqueName": data.PurchaseOrg
                                                 },
-                                                "Quantity": 10,
+                                                "Quantity": data.Quantity,
                                                 "ShipTo": {
-                                                    "UniqueName": "3702"
+                                                    "UniqueName": data.ShipTo
                                                 },
                                                 "Supplier": {
-                                                    "UniqueName": "2010005421"
+                                                    "UniqueName": data.Supplier
                                                 },
                                                 "SupplierLocation": {
-                                                    "UniqueName": "MAIN"
+                                                    "UniqueName": data.SupplierLocation
                                                 },
-                                                "ImportedNeedByStaging": "2026-01-30T00:00:00Z",
-                                                "ImportedDeliverToStaging": "Raj"
+                                                "ServiceDetails": {
+                                                    "ExpectedAmount": data.ExpectedAmount,
+                                                    "MaxAmount": data.MaxAmount,
+                                                    "ServiceEndDate": data.ServiceEndDate,
+                                                    "ServiceStartDate": data.ServiceStartDate
+                                                },
+                                                "ImportedNeedByStaging": data.ImportedNeedByStaging,
+                                                "ImportedDeliverToStaging": data.ImportedDeliverToStaging
                                             }
                                         ]
                                     },
-                                    "Name": "SOAP Test Ariba PR",
-                                    "OriginatingSystem": "EXT_SYSTEM",
+                                    "Name": data.Name,
+                                    "OriginatingSystem": data.OriginatingSystem,
                                     "Preparer": {
-                                        "PasswordAdapter": "PasswordAdapter1",
-                                        "UniqueName": "SRIANTH"
+                                        "PasswordAdapter": data.PasswordAdapter,
+                                        "UniqueName": data.Preparer
                                     },
                                     "Requester": {
-                                        "PasswordAdapter": "PasswordAdapter1",
-                                        "UniqueName": "SRIANTH"
+                                        "PasswordAdapter": data.PasswordAdapter,
+                                        "UniqueName": data.Requester
                                     },
-                                    "UniqueName": "EXT-PR-100002"
+                                    "UniqueName": data.UniqueName
                                 }
                             ]
                         }
@@ -281,7 +294,7 @@ module.exports = cds.service.impl(async function () {
                 throw new Error(valid.errors.map(v => v.message).join("; "));
             }
 
-            const inputjson = constructInput()
+            const inputjson = constructInput(req.data)
             return {
                 content: [{
                     type: "text",
@@ -330,42 +343,140 @@ Only provide values that satisfy validation rules.
                     .string()
                     .describe("Validated requester email ID. Must be authorized and correctly formatted."),
 
-                contractId: z
+                requesterId: z
                     .string()
-                    .describe("Validated contract ID. Must exist and be approved for PR creation."),
+                    .describe("Validated requester email ID. Must be authorized."),
 
-                description: z
+                CompanyCode: z
                     .string()
-                    .describe("Validated purchase description. Minimum 10 meaningful characters.")
-                    .optional(),
+                    .describe("Validated Company Code. Must be supported by the system."),
 
-                quantity: z
+                DeliverTo: z
+                    .string()
+                    .describe("Validated purchase description. Minimum 3 characters."),
+
+                NeedBy: z
+                    .string()
+                    .describe("Validated NeedBy. Date format should be ISO 8601 date format"),
+
+                BillingAddress: z
+                    .string()
+                    .describe("Validated quoted price. Must be a String value."),
+
+                CommodityCode: z
+                    .string()
+                    .describe("Validated Commodity code. Must be supported."),
+
+                Description: z
+                    .string()
+                    .describe("Validated Description. Must more than 10 characters."),
+
+                Amount: z
                     .number()
-                    .describe("Validated quantity. Positive number within allowed limits."),
+                    .describe("Validated Amount. Must be numeric value"),
 
-                needByDate: z
+                Currency: z
                     .string()
-                    .describe("Validated need-by date in ISO format (YYYY-MM-DD). Must not be in the past."),
+                    .describe("Validated Currency. Must be in ISO 4217 standard"),
 
-                companyCode: z
+                UnitOfMeasure: z
                     .string()
-                    .describe("Validated company code. Must belong to allowed company codes."),
+                    .describe("Validated UnitOfMeasure. Must support System."),
 
-                glAccount: z
+                ImportedAccountCategoryStaging: z
                     .string()
-                    .describe("Validated GL account. Must be allowed for posting."),
+                    .describe("Validated ImportedAccountCategoryStaging.").optional(),
 
-                costCenter: z
+                Account: z
                     .string()
-                    .describe("Validated cost center responsible for the expense."),
+                    .describe("Validated Account."),
+
+                CostCenter: z
+                    .string()
+                    .describe("Validated CostCenter"),
+
+                NumberInCollection: z
+                    .string()
+                    .describe("Validated NumberInCollection. Must be numeric"),
+                Percentage: z
+                    .string()
+                    .describe("Validated Percentage. Must be numeric"),
+                ProcurementUnit: z
+                    .string()
+                    .describe("Validated ProcurementUnit. Must support system"),
+                ItemCategory: z
+                    .string()
+                    .describe("Validated ItemCategory. Single character like 'M' "),
+                OriginatingSystemLineNumber: z
+                    .string()
+                    .describe("Validated OriginatingSystemLineNumber"),
+                PurchaseGroup: z
+                    .string()
+                    .describe("Validated PurchaseGroup. Must support system"),
+                PurchaseOrg: z
+                    .string()
+                    .describe("Validated PurchaseOrg. Must support system"),
+                Quantity: z
+                    .string()
+                    .describe("Validated Quantity. Must be numeric"),
+                ShipTo: z
+                    .string()
+                    .describe("Validated ShipTo. Must support system"),
+                Supplier: z
+                    .string()
+                    .describe("Validated Supplier. Must support system"),
+                SupplierLocation: z
+                    .string()
+                    .describe("Validated SupplierLocation. Must support system"),
+                ImportedNeedByStaging: z
+                    .string()
+                    .describe("Validated ImportedNeedByStaging. Date format should be ISO 8601 date format"),
+                ImportedDeliverToStaging: z
+                    .string()
+                    .describe("Validated ImportedDeliverToStaging. Must be string"),
+                Name: z
+                    .string()
+                    .describe("Validated Name. Must be string"),
+                OriginatingSystem: z
+                    .string()
+                    .describe("Validated OriginatingSystem. Must support system"),
+                PasswordAdapter: z
+                    .string()
+                    .describe("Validated PasswordAdapter. Must support system"),
+                Preparer: z
+                    .string()
+                    .describe("Validated Preparer. Must support system"),
+                Requester: z
+                    .string()
+                    .describe("Validated Requester. Must support system"),
+                UniqueName: z
+                    .string()
+                    .describe("Validated UniqueName. Must be string"),
 
                 isSourcingPr: z
                     .boolean()
                     .describe("Validated sourcing flag. Boolean value indicating sourcing relevance.")
-                    .optional()
+                    .optional(),
+
+                ServiceStartDate: z
+                    .string()
+                    .describe("Validated serviceStartDate. Date format should be ISO 8601 date format").optional(),
+
+                ServiceEndDate: z
+                    .string()
+                    .describe("Validated servcieEndDate. Date format should be ISO 8601 date format").optional(),
+
+                MaxAmount: z
+                    .number()
+                    .describe("Validated MaxAmount. Must be numeric value").optional(),
+
+                ExpectedAmount: z
+                    .number()
+                    .describe("Validated ExpectedAmount. Must be numeric value").optional(),
             }
         },
         async (data) => {
+            console.log("Data from Create from contract:  --  ", data)
             try {
                 const valid = await runAllValidations(data, "contract");
 
@@ -374,7 +485,7 @@ Only provide values that satisfy validation rules.
                 }
 
                 /// Sample test run ...
-                const inputjson = constructInput()
+                const inputjson = constructInput(data)
                 return {
                     content: [{
                         type: "text",
@@ -412,54 +523,136 @@ Only enter compliant and verified values.
                     .string()
                     .describe("Validated requester email ID. Must be authorized."),
 
-                productName: z
+                CompanyCode: z
                     .string()
-                    .describe("Validated product name. Must be supported by the system."),
+                    .describe("Validated Company Code. Must be supported by the system."),
 
-                description: z
+                DeliverTo: z
                     .string()
-                    .describe("Validated purchase description. Minimum 10 characters.")
-                    .optional(),
+                    .describe("Validated purchase description. Minimum 3 characters."),
 
-                quantity: z
+                NeedBy: z
+                    .string()
+                    .describe("Validated NeedBy. Date format should be ISO 8601 date format"),
+
+                BillingAddress: z
+                    .string()
+                    .describe("Validated quoted price. Must be a String value."),
+
+                CommodityCode: z
+                    .string()
+                    .describe("Validated Commodity code. Must be supported."),
+
+                Description: z
+                    .string()
+                    .describe("Validated Description. Must more than 10 characters."),
+
+                Amount: z
                     .number()
-                    .describe("Validated quantity. Positive number within allowed range."),
+                    .describe("Validated Amount. Must be numeric value"),
 
-                price: z
-                    .number()
-                    .describe("Validated quoted price. Must be a positive numeric value."),
-
-                currency: z
+                Currency: z
                     .string()
-                    .describe("Validated ISO currency code (e.g., USD, INR). Must be supported."),
+                    .describe("Validated Currency. Must be in ISO 4217 standard"),
 
-                supplierId: z
+                UnitOfMeasure: z
                     .string()
-                    .describe("Validated supplier ID. Must be approved and supported."),
+                    .describe("Validated UnitOfMeasure. Must support System."),
 
-                needByDate: z
+                ImportedAccountCategoryStaging: z
                     .string()
-                    .describe("Validated delivery date in ISO format (YYYY-MM-DD). Cannot be in the past."),
+                    .describe("Validated ImportedAccountCategoryStaging.").optional(),
 
-                companyCode: z
+                Account: z
                     .string()
-                    .describe("Validated company code under which the PR is created."),
+                    .describe("Validated Account."),
 
-                glAccount: z
+                CostCenter: z
                     .string()
-                    .describe("Validated GL account for financial posting."),
+                    .describe("Validated CostCenter"),
 
-                costCenter: z
+                NumberInCollection: z
                     .string()
-                    .describe("Validated cost center responsible for the expense."),
+                    .describe("Validated NumberInCollection. Must be numeric"),
+                Percentage: z
+                    .string()
+                    .describe("Validated Percentage. Must be numeric"),
+                ProcurementUnit: z
+                    .string()
+                    .describe("Validated ProcurementUnit. Must support system"),
+                ItemCategory: z
+                    .string()
+                    .describe("Validated ItemCategory. Single character like 'M' "),
+                OriginatingSystemLineNumber: z
+                    .string()
+                    .describe("Validated OriginatingSystemLineNumber"),
+                PurchaseGroup: z
+                    .string()
+                    .describe("Validated PurchaseGroup. Must support system"),
+                PurchaseOrg: z
+                    .string()
+                    .describe("Validated PurchaseOrg. Must support system"),
+                Quantity: z
+                    .string()
+                    .describe("Validated Quantity. Must be numeric"),
+                ShipTo: z
+                    .string()
+                    .describe("Validated ShipTo. Must support system"),
+                Supplier: z
+                    .string()
+                    .describe("Validated Supplier. Must support system"),
+                SupplierLocation: z
+                    .string()
+                    .describe("Validated SupplierLocation. Must support system"),
+                ImportedNeedByStaging: z
+                    .string()
+                    .describe("Validated ImportedNeedByStaging. Date format should be ISO 8601 date format"),
+                ImportedDeliverToStaging: z
+                    .string()
+                    .describe("Validated ImportedDeliverToStaging. Must be string"),
+                Name: z
+                    .string()
+                    .describe("Validated Name. Must be string"),
+                OriginatingSystem: z
+                    .string()
+                    .describe("Validated OriginatingSystem. Must support system"),
+                PasswordAdapter: z
+                    .string()
+                    .describe("Validated PasswordAdapter. Must support system"),
+                Preparer: z
+                    .string()
+                    .describe("Validated Preparer. Must support system"),
+                Requester: z
+                    .string()
+                    .describe("Validated Requester. Must support system"),
+                UniqueName: z
+                    .string()
+                    .describe("Validated UniqueName. Must be string"),
 
                 isSourcingPr: z
                     .boolean()
-                    .describe("Validated sourcing flag. Boolean value only.")
-                    .optional()
+                    .describe("Validated sourcing flag. Boolean value indicating sourcing relevance.")
+                    .optional(),
+
+                ServiceStartDate: z
+                    .string()
+                    .describe("Validated serviceStartDate. Date format should be ISO 8601 date format").optional(),
+
+                ServiceEndDate: z
+                    .string()
+                    .describe("Validated servcieEndDate. Date format should be ISO 8601 date format").optional(),
+
+                MaxAmount: z
+                    .number()
+                    .describe("Validated MaxAmount. Must be numeric value").optional(),
+
+                ExpectedAmount: z
+                    .number()
+                    .describe("Validated ExpectedAmount. Must be numeric value").optional(),
             }
         },
         async (data) => {
+            console.log("Data from Create from quotation:  --  ", data)
             try {
                 const valid = await runAllValidations(data, "quotation");
 
@@ -467,7 +660,7 @@ Only enter compliant and verified values.
                     throw new Error(valid.errors.map(v => v.message).join("; "));
                 }
 
-                const inputjson = constructInput()
+                const inputjson = constructInput(data)
                 return {
                     content: [{
                         type: "text",
@@ -491,197 +684,375 @@ Only enter compliant and verified values.
         }
     );
 
-/*
-    server.registerTool(
-        "ValidatePrWithQuotation",
-        {
-            title: "Validate Purchase Requisition with Quotation",
-            description: `
-Validates a Purchase Requisition using a quotation-based process.
-    `,
-            inputSchema: {
-                requesterId: z
-                    .string()
-                    .describe("Email ID of the requester. Must be a valid and authorized email address."),
-
-                productName: z
-                    .string()
-                    .describe("Product name to be procured using a quotation. Must match supported product names."),
-
-                description: z
-                    .string()
-                    .describe("Detailed description of the purchase requirement. Minimum 10 characters.")
-                    .optional(),
-
-                quantity: z
-                    .number()
-                    .describe("Quantity requested. Must be a positive number within allowed limits."),
-
-                price: z
-                    .number()
-                    .describe("Quoted unit price of the product. Must be a positive numeric value."),
-
-                currency: z
-                    .string()
-                    .describe("3-letter ISO currency code used in the quotation (e.g., USD, INR). Must be supported."),
-
-                supplierId: z
-                    .string()
-                    .describe("Supplier ID providing the quotation. Must be selected from supported suppliers."),
-
-                needByDate: z
-                    .string()
-                    .describe("Required delivery date in ISO format (YYYY-MM-DD). Cannot be a past date."),
-
-                companyCode: z
-                    .string()
-                    .describe("Company code under which the PR is created. Must be a valid company code."),
-
-                glAccount: z
-                    .string()
-                    .describe("GL account for posting the purchase cost. Must be a supported GL account."),
-
-                costCenter: z
-                    .string()
-                    .describe("Cost center responsible for the expense. Must be a valid cost center."),
-
-                isSourcingPr: z
-                    .boolean()
-                    .describe("Indicates whether the PR is related to sourcing. Optional boolean flag.")
-                    .optional()
+    /*
+        server.registerTool(
+            "createPrWithContract",
+            {
+                title: "Create Purchase Requisition with Contract",
+                description: `
+    Creates a Purchase Requisition using a contract-based process.
+    All input fields must already be valid. 
+    Only provide values that satisfy validation rules.
+        `,
+                inputSchema: {
+                    requesterId: z
+                        .string()
+                        .describe("Validated requester email ID. Must be authorized and correctly formatted."),
+    
+                    contractId: z
+                        .string()
+                        .describe("Validated contract ID. Must exist and be approved for PR creation."),
+    
+                    description: z
+                        .string()
+                        .describe("Validated purchase description. Minimum 10 meaningful characters.")
+                        .optional(),
+    
+                    quantity: z
+                        .number()
+                        .describe("Validated quantity. Positive number within allowed limits."),
+    
+                    needByDate: z
+                        .string()
+                        .describe("Validated need-by date in ISO format (YYYY-MM-DD). Must not be in the past."),
+    
+                    companyCode: z
+                        .string()
+                        .describe("Validated company code. Must belong to allowed company codes."),
+    
+                    glAccount: z
+                        .string()
+                        .describe("Validated GL account. Must be allowed for posting."),
+    
+                    costCenter: z
+                        .string()
+                        .describe("Validated cost center responsible for the expense."),
+    
+                    isSourcingPr: z
+                        .boolean()
+                        .describe("Validated sourcing flag. Boolean value indicating sourcing relevance.")
+                        .optional()
+                }
+            },
+            async (data) => {
+                console.log("Data from Create from contract:  --  ", data )
+                try {
+                    const valid = await runAllValidations(data, "contract");
+    
+                    if (!valid.success) {
+                        throw new Error(valid.errors.map(v => v.message).join("; "));
+                    }
+    
+                    /// Sample test run ...
+                    const inputjson = constructInput(data)
+                    return {
+                        content: [{
+                            type: "text",
+                            text: JSON.stringify(await callCreatePR(inputjson))
+                        }]
+                    };
+                } catch (error) {
+                    return {
+                        content: [{
+                            type: "text",
+                            text: JSON.stringify({
+                                success: false,
+                                requisitionId: null,
+                                status: "Failed",
+                                messages: [error.message || "Validation Failed"]
+                            }, null, 2)
+                        }],
+                        isError: true
+                    };
+                }
             }
-
-        },
-        async (data) => {
-
-            const valid = await runAllValidations(data, "quotation");
-
-            if (!valid.success) {
-                return {
-                    content: [{
-                        type: "text",
-                        text: JSON.stringify({
-                            success: false,
-                            status: "Failed",
-                            messages: valid.errors
-                        }, null, 2)
-                    }],
-                    isError: true
-                };
+        );
+    
+        server.registerTool(
+            "createPrWithQuotation",
+            {
+                title: "Create Purchase Requisition with Quotation",
+                description: `
+    Creates a Purchase Requisition using a quotation-based process.
+    All provided fields must already be validated.
+    Only enter compliant and verified values.
+        `,
+                inputSchema: {
+                    requesterId: z
+                        .string()
+                        .describe("Validated requester email ID. Must be authorized."),
+    
+                    productName: z
+                        .string()
+                        .describe("Validated product name. Must be supported by the system."),
+    
+                    description: z
+                        .string()
+                        .describe("Validated purchase description. Minimum 10 characters.")
+                        .optional(),
+    
+                    quantity: z
+                        .number()
+                        .describe("Validated quantity. Positive number within allowed range."),
+    
+                    price: z
+                        .number()
+                        .describe("Validated quoted price. Must be a positive numeric value."),
+    
+                    currency: z
+                        .string()
+                        .describe("Validated ISO currency code (e.g., USD, INR). Must be supported."),
+    
+                    supplierId: z
+                        .string()
+                        .describe("Validated supplier ID. Must be approved and supported."),
+    
+                    needByDate: z
+                        .string()
+                        .describe("Validated delivery date in ISO format (YYYY-MM-DD). Cannot be in the past."),
+    
+                    companyCode: z
+                        .string()
+                        .describe("Validated company code under which the PR is created."),
+    
+                    glAccount: z
+                        .string()
+                        .describe("Validated GL account for financial posting."),
+    
+                    costCenter: z
+                        .string()
+                        .describe("Validated cost center responsible for the expense."),
+    
+                    isSourcingPr: z
+                        .boolean()
+                        .describe("Validated sourcing flag. Boolean value only.")
+                        .optional()
+                }
+            },
+            async (data) => {
+                console.log("Data from Create from quotation:  --  ", data )
+                try {
+                    const valid = await runAllValidations(data, "quotation");
+    
+                    if (!valid.success) {
+                        throw new Error(valid.errors.map(v => v.message).join("; "));
+                    }
+    
+                    const inputjson = constructInput(data)
+                    return {
+                        content: [{
+                            type: "text",
+                            text: JSON.stringify(await callCreatePR(inputjson))
+                        }]
+                    };
+                } catch (error) {
+                    return {
+                        content: [{
+                            type: "text",
+                            text: JSON.stringify({
+                                success: false,
+                                requisitionId: null,
+                                status: "Failed",
+                                messages: [error.message || "Validation Failed"]
+                            }, null, 2)
+                        }],
+                        isError: true
+                    };
+                }
             }
-            else {
-                return {
-                    content: [{
-                        type: "text",
-                        text: JSON.stringify({
-                            success: true,
-                            status: "Validated",
-                            messages: valid?.message
-                        }, null, 2)
-                    }]
-                };
-
+        );
+    
+    
+        server.registerTool(
+            "ValidatePrWithQuotation",
+            {
+                title: "Validate Purchase Requisition with Quotation",
+                description: `
+    Validates a Purchase Requisition using a quotation-based process.
+        `,
+                inputSchema: {
+                    requesterId: z
+                        .string()
+                        .describe("Email ID of the requester. Must be a valid and authorized email address."),
+    
+                    productName: z
+                        .string()
+                        .describe("Product name to be procured using a quotation. Must match supported product names."),
+    
+                    description: z
+                        .string()
+                        .describe("Detailed description of the purchase requirement. Minimum 10 characters.")
+                        .optional(),
+    
+                    quantity: z
+                        .number()
+                        .describe("Quantity requested. Must be a positive number within allowed limits."),
+    
+                    price: z
+                        .number()
+                        .describe("Quoted unit price of the product. Must be a positive numeric value."),
+    
+                    currency: z
+                        .string()
+                        .describe("3-letter ISO currency code used in the quotation (e.g., USD, INR). Must be supported."),
+    
+                    supplierId: z
+                        .string()
+                        .describe("Supplier ID providing the quotation. Must be selected from supported suppliers."),
+    
+                    needByDate: z
+                        .string()
+                        .describe("Required delivery date in ISO format (YYYY-MM-DD). Cannot be a past date."),
+    
+                    companyCode: z
+                        .string()
+                        .describe("Company code under which the PR is created. Must be a valid company code."),
+    
+                    glAccount: z
+                        .string()
+                        .describe("GL account for posting the purchase cost. Must be a supported GL account."),
+    
+                    costCenter: z
+                        .string()
+                        .describe("Cost center responsible for the expense. Must be a valid cost center."),
+    
+                    isSourcingPr: z
+                        .boolean()
+                        .describe("Indicates whether the PR is related to sourcing. Optional boolean flag.")
+                        .optional()
+                }
+    
+            },
+            async (data) => {
+    
+                const valid = await runAllValidations(data, "quotation");
+    
+                if (!valid.success) {
+                    return {
+                        content: [{
+                            type: "text",
+                            text: JSON.stringify({
+                                success: false,
+                                status: "Failed",
+                                messages: valid.errors
+                            }, null, 2)
+                        }],
+                        isError: true
+                    };
+                }
+                else {
+                    return {
+                        content: [{
+                            type: "text",
+                            text: JSON.stringify({
+                                success: true,
+                                status: "Validated",
+                                messages: valid?.message
+                            }, null, 2)
+                        }]
+                    };
+    
+                }
             }
-        }
-    );
-
-    server.registerTool(
-        "ValidatePrWithContract",
-        {
-            title: "Validate Purchase Requisition with Contract",
-            description: `
-Validates a Purchase Requisition using a contract-based process.
-    `,
-            inputSchema: {
-                requesterId: z
-                    .string()
-                    .describe("Email ID of the requester. Must be a valid and authorized email address."),
-
-                contractId: z
-                    .string()
-                    .describe("Contract ID against which the Purchase Requisition is created. Must be a valid contract identifier."),
-
-                productName: z
-                    .string()
-                    .describe("Product name to be procured. Must match one of the supported product names."),
-
-                description: z
-                    .string()
-                    .describe("Detailed description of the purchase requirement. Minimum 10 characters.")
-                    .optional(),
-
-                quantity: z
-                    .number()
-                    .describe("Quantity of the product requested. Must be greater than zero and within allowed limits."),
-
-                price: z
-                    .number()
-                    .describe("Unit price of the product. Must be a positive numeric value."),
-
-                currency: z
-                    .string()
-                    .describe("3-letter ISO currency code for the price (e.g., USD, INR). Must be supported."),
-
-                supplierId: z
-                    .string()
-                    .describe("Supplier identifier. Must be selected from supported suppliers."),
-
-                needByDate: z
-                    .string()
-                    .describe("Required delivery date in ISO format (YYYY-MM-DD). Cannot be in the past."),
-
-                companyCode: z
-                    .string()
-                    .describe("Company code under which the PR is created. Must be a valid company code."),
-
-                glAccount: z
-                    .string()
-                    .describe("GL account for posting the purchase cost. Must be a valid GL account."),
-
-                costCenter: z
-                    .string()
-                    .describe("Cost center responsible for the expense. Must be a valid cost center."),
-
-                isSourcingPr: z
-                    .boolean()
-                    .describe("Indicates whether the PR is related to sourcing. Optional boolean flag.")
-                    .optional()
+        );
+    
+        server.registerTool(
+            "ValidatePrWithContract",
+            {
+                title: "Validate Purchase Requisition with Contract",
+                description: `
+    Validates a Purchase Requisition using a contract-based process.
+        `,
+                inputSchema: {
+                    requesterId: z
+                        .string()
+                        .describe("Email ID of the requester. Must be a valid and authorized email address."),
+    
+                    contractId: z
+                        .string()
+                        .describe("Contract ID against which the Purchase Requisition is created. Must be a valid contract identifier."),
+    
+                    productName: z
+                        .string()
+                        .describe("Product name to be procured. Must match one of the supported product names."),
+    
+                    description: z
+                        .string()
+                        .describe("Detailed description of the purchase requirement. Minimum 10 characters.")
+                        .optional(),
+    
+                    quantity: z
+                        .number()
+                        .describe("Quantity of the product requested. Must be greater than zero and within allowed limits."),
+    
+                    price: z
+                        .number()
+                        .describe("Unit price of the product. Must be a positive numeric value."),
+    
+                    currency: z
+                        .string()
+                        .describe("3-letter ISO currency code for the price (e.g., USD, INR). Must be supported."),
+    
+                    supplierId: z
+                        .string()
+                        .describe("Supplier identifier. Must be selected from supported suppliers."),
+    
+                    needByDate: z
+                        .string()
+                        .describe("Required delivery date in ISO format (YYYY-MM-DD). Cannot be in the past."),
+    
+                    companyCode: z
+                        .string()
+                        .describe("Company code under which the PR is created. Must be a valid company code."),
+    
+                    glAccount: z
+                        .string()
+                        .describe("GL account for posting the purchase cost. Must be a valid GL account."),
+    
+                    costCenter: z
+                        .string()
+                        .describe("Cost center responsible for the expense. Must be a valid cost center."),
+    
+                    isSourcingPr: z
+                        .boolean()
+                        .describe("Indicates whether the PR is related to sourcing. Optional boolean flag.")
+                        .optional()
+                }
+            },
+            async (data) => {
+    
+                const valid = await runAllValidations(data, "contract");
+    
+                if (!valid.success) {
+                    return {
+                        content: [{
+                            type: "text",
+                            text: JSON.stringify({
+                                success: false,
+                                status: "Failed",
+                                messages: valid.errors
+                            }, null, 2)
+                        }],
+                        isError: true
+                    };
+                }
+                else {
+                    return {
+                        content: [{
+                            type: "text",
+                            text: JSON.stringify({
+                                success: true,
+                                status: "Validated",
+                                messages: valid?.message
+                            }, null, 2)
+                        }]
+                    };
+    
+                }
             }
-        },
-        async (data) => {
-
-            const valid = await runAllValidations(data, "contract");
-
-            if (!valid.success) {
-                return {
-                    content: [{
-                        type: "text",
-                        text: JSON.stringify({
-                            success: false,
-                            status: "Failed",
-                            messages: valid.errors
-                        }, null, 2)
-                    }],
-                    isError: true
-                };
-            }
-            else {
-                return {
-                    content: [{
-                        type: "text",
-                        text: JSON.stringify({
-                            success: true,
-                            status: "Validated",
-                            messages: valid?.message
-                        }, null, 2)
-                    }]
-                };
-
-            }
-        }
-    );
-
-*/
+        );
+    
+    */
 
 
 

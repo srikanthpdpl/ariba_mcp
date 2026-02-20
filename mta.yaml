@@ -1,5 +1,5 @@
 _schema-version: 3.3.0
-ID: ariba_pr_mcp
+ID: ariba_pr_mcp2
 version: 1.0.0
 description: "A simple CAP project."
 parameters:
@@ -12,7 +12,7 @@ build-parameters:
         - npm ci
         - npx cds build --production
 modules:
-  - name: ariba_pr_mcp-srv
+  - name: ariba_pr_mcp-srv2
     type: nodejs
     path: gen/srv
     properties:
@@ -42,14 +42,20 @@ modules:
       ACCOUNTTYPES_URL: "${ariba-base-url}/accounttypes"
       ACCOUNTS_URL: "${ariba-base-url}/accounts"
       PAYMENTTERMS_URL: "${ariba-base-url}/paymentterms"
+      ADDRESS_URL : "${ariba-base-url}/addresses"
+
       CONTRACTS_URL : "${ariba-base-url}/api/contract-compliance/v1/sandbox/contractRequests"
+
       ARIBA_USERNAME : "Santosh.Lokhande@lipton.com"
       ARIBA_PASSWORD : "Danfug-mecso9-ruvrom"
       ARIBA_REQUISITION_IMPORT_URL : "https://s1-eu.ariba.com/Buyer/soap/EKATERRA1-T/RequisitionImportPull"
+      ARIBA_HOSTNAME: "s1-eu.ariba.com"
+      ARIBA_SOAPPATH: "/Buyer/soap/EKATERRA1-T/RequisitionImportPull"
 
     parameters:
       instances: 1
       buildpack: nodejs_buildpack
+      health-check-timeout: 120
     build-parameters:
       builder: npm-ci
     provides:

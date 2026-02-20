@@ -1,4 +1,4 @@
-@server=http://localhost:4003
+@server=http://localhost:4004
 @username=alice
 @password=
 
@@ -37,19 +37,114 @@ POST {{server}}/mcps/createAribaPurchaseRequisition
 Content-Type: application/json
 Authorization: Basic {{username}}:{{password}}
 
+  {
+    "requesterId": "AFSHAN.AHMED@LIPTON.COM",
+    "companyCode": "1000",
+    "supplierId": "SUPP_1001",
+    "quantity": 19,
+    "price": 803071617.29,
+    "currency": "USD",
+    "needByDate": "2026-03-10",
+    "glAccount": "500000",
+    
+    "productName": "Laptop",
+    "description": "description-6325225",
+    "costCenter": "CC100",
+    "isSourcingPr": false,
+    "type": "quotation"
+  }
+
+
+
+
+-----------
+
+
+### createAribaPurchaseRequisition
+POST {{server}}/mcps/createAribaPurchaseRequisition
+Content-Type: application/json
+Authorization: Basic {{username}}:{{password}}
+
 {
-  "requesterId": "AFSHAN.AHMED@LIPTON.COM",
-  "companyCode": "1000",
-  "supplierId": "SU_INTERNAL86052967",
-  "quantity": 19,
-  "price": 803071617.29,
-  "currency": "AUD",
-  "needByDate": "2026-03-10",
-  "glAccount": "00124000000",
-  
-  "productName": "productName-6325225",
-  "description": "description-6325225",
-  "costCenter": "costCenter-6325225",
-  "isSourcingPr": false,
-  "type": "quotation"
+  "CompanyCode": "3710",
+  "DeliverTo": "Srikanth",
+  "NeedBy": "2026-01-30T00:00:00Z",
+  "BillingAddress": "3710",
+  "CommodityCode": "88.20.92.10",
+  "Description": "Indirect Business services Talent Mgmt Learning and developmen",
+  "Amount": 100,
+  "Currency": "SGD",
+  "UnitOfMeasure": "EA",
+  "ImportedAccountCategoryStaging": "Opex",
+  "Account": "0075400000",
+  "CostCenter": "G370200003",
+  "GLAccount": "0075400000",
+  "NumberInCollection": 1,
+  "Percentage": 100,
+  "ProcurementUnit": "3710",
+  "ItemCategory": "M",
+  "OriginatingSystemLineNumber": "1",
+  "PurchaseGroup": "003",
+  "PurchaseOrg": "3710",
+  "Quantity": 10,
+  "ShipTo": "3702",
+  "Supplier": "2010005421",
+  "SupplierLocation": "MAIN",
+  "ImportedNeedByStaging": "2026-01-30T00:00:00Z",
+  "ImportedDeliverToStaging": "Srikanth",
+  "Name": "PR Material001",
+  "OriginatingSystem": "EXT_SYSTEM",
+  "PasswordAdapter": "PasswordAdapter1",
+  "Preparer": "SRIANTH",
+  "Requester": "SRIANTH",
+  "UniqueName": "EXT-PR-100002",
+  "requesterId":"AFSHAN.AHMED@LIPTON.COM"
 }
+
+
+------
+### createAribaPurchaseRequisition
+POST {{server}}/mcps/createAribaPurchaseRequisition
+Content-Type: application/json
+Authorization: Basic {{username}}:{{password}}
+
+{
+  "CompanyCode": "3710",
+  "DeliverTo": "Raj Sharma",
+  "NeedBy": "2026-02-28T00:00:00Z",
+  "BillingAddress": "3710",
+  "CommodityCode": "88.40.10.12",
+  "Description": "Indirect-IT-IT Hardware-IT Hardware component",
+  "Amount": 188,
+  "Currency": "SGD",
+  "UnitOfMeasure": "EA",
+  "ImportedAccountCategoryStaging": "Opex",
+  "Account": "0071500000",
+  "CostCenter": "G370200003",
+  "GLAccount": "0075400000",
+  "NumberInCollection": 1,
+  "Percentage": 100,
+  "ProcurementUnit": "3710",
+  "ItemCategory": "D",
+  "OriginatingSystemLineNumber": "1",
+  "PurchaseGroup": "003",
+  "PurchaseOrg": "3710",
+  "Quantity": 10,
+  "ShipTo": "3702",
+  "Supplier": "2010005421",
+  "SupplierLocation": "MAIN",
+  "ImportedNeedByStaging": "2026-02-28T00:00:00Z",
+  "ImportedDeliverToStaging": "Srikanth",
+  "Name": "PR Material003",
+  "OriginatingSystem": "EXT_SYSTEM",
+  "PasswordAdapter": "PasswordAdapter1",
+  "Preparer": "SRIANTH",
+  "Requester": "SRIANTH",
+  "UniqueName": "EXT-PR-100002",
+  "requesterId":"AFSHAN.AHMED@LIPTON.COM",
+  "ServiceStartDate": "2026-02-18T00:00:00Z",
+  "ServiceEndDate": "2026-02-28T00:00:00Z",
+  "MaxAmount": 100,
+  "ExpectedAmount": 100
+}
+

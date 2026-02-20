@@ -19,7 +19,7 @@
     "@sap/cds-dk": "^9"
   },
   "scripts": {
-    "start": "cds-serve --port 4003"
+    "start": "cds-serve"
   },
   "private": true,
   "cds": {
