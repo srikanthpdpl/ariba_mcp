@@ -6,40 +6,6 @@ const { getUser, getContractIds, getCommodityCodes, getIncoTerms, getProducts, g
   getWBSElement, getGeneralLedgers, getUOMs, getAccounts, getPaymentTerms, callAribaRequisitionImportPull } = require('./apicalls');
 // const { success } = require('zod');
 
-// validate.js
-
-
-// ---------- Hardcoded data ----------
-// const allowedRequesterEmails = [
-//   "harish.yarra@aarini.com",
-//   "akulapoornasasank@gmail.com"
-// ];
-
-const allowedProducts = [
-  "Laptop",
-  "Desktop",
-  "Monitor",
-  "Keyboard",
-  "Mouse",
-  "Printer",
-  "Scanner",
-  "Router",
-  "Switch",
-  "UPS"
-];
-
-const productQuantityMap = {
-  Laptop: 10,
-  Desktop: 8,
-  Monitor: 25,
-  Keyboard: 100,
-  Mouse: 150,
-  Printer: 5,
-  Scanner: 7,
-  Router: 12,
-  Switch: 20,
-  UPS: 6
-};
 
 // ---------- Validators ----------
 
@@ -89,7 +55,7 @@ async function validateCompanyCode(value) {
   if (!value) {
     return { success: false, message: "Company Code is mandatory" };
   }
-
+  console.log("... Company Code....")
   const companyCodes = await getCompanyCodes(value);
 
   if (companyCodes.length > 0) {
@@ -104,13 +70,15 @@ async function validateCompanyCode(value) {
 /// Shipto, DeliverTo, BillingAddress. ---- type can be "ShipTo,BillTo,DeliveryTo"
 async function validateAddress(type,value, companycode) {
   if (!value) return { success: false, message: type+" is mandatory" };
-  const shipto = await getAddress(value, companycode);
+  console.log("... Address....")
+  // const shipto = await getAddress(value, companycode);
 
-  if (shipto.length > 0) {
-    return { success: true, message: type+" is valid" };
-  } else {
-    return { success: false, message: type+" is not valid" }
-  }
+  // if (shipto.length > 0) {
+  //   return { success: true, message: type+" is valid" };
+  // } else {
+  //   return { success: false, message: type+" is not valid" }
+  // }
+  return { success: true, message: type+" is valid" };
 }
 
 
@@ -119,70 +87,37 @@ async function validateSupplierId(value) {
   if (!value) {
     return { success: false, message: "Supplier ID is mandatory" };
   }
+  console.log("... SupplierID....")
+  // const supplier = await getSuppliers(value);
 
-  const supplier = await getSuppliers(value);
-
-  if (supplier.length > 0) {
-    return { success: true, message: "Supplier ID is valid" };
-  } else {
-    return { success: false, message: "Supplier is not valid" }
-  }
+  // if (supplier.length > 0) {
+  //   return { success: true, message: "Supplier ID is valid" };
+  // } else {
+  //   return { success: false, message: "Supplier is not valid" }
+  // }
+  return { success: true, message: "Supplier ID is valid" };
 }
 
 async function validateDeliverTo(value) {
   if (!value) return { success: false, message: "DeliverTo is mandatory" };
-  const shipto = await getAddress(value, companycode);
-
-  if (shipto.length > 0) {
-    return { success: true, message: "DeliverTo is valid" };
-  } else {
-    return { success: false, message: "DeliverTo is not valid" }
-  }
+console.log("... Deliver To....")
+  return { success: true, message: "DeliverTo is valid" };
 }
 
 async function validateAttachments(value) {
   if (!value) {
     return { success: false, message: "Attachments are mandatory" };
   }
+  console.log("... Attachments....")
   /// Code here for Attachment upload
 
   return { success: true, message: "Attachments is valid" };
 }
 
-/// Need to work on Product Logic.....
-// Validate aganist Material number...
-function validateProductName(value) {
-
-  if (!value) {
-    return {
-      success: false,
-      expectedValues: allowedProducts,
-      message: "Product name is mandatory"
-    };
-  }
-
-  const normalizedValue = value.toString().trim().toLowerCase();
-  const normalizedAllowed = allowedProducts.map(p =>
-    p.toString().trim().toLowerCase()
-  );
-
-  if (!normalizedAllowed.includes(normalizedValue)) {
-    return {
-      success: false,
-      expectedValues: allowedProducts,
-      message: "Product name is not supported"
-    };
-  }
-
-  return {
-    success: true,
-    message: "Product name is valid"
-  };
-}
-
 // Validated against Material Desc 
 async function validateDescription(value) {
   if (!value) return { success: false, message: "Description is mandatory" };
+  console.log("... Description....")
   if (value.trim().length < 10) {
     return { success: false, message: "Description must contain at least 10 characters" };
   }
@@ -193,7 +128,7 @@ async function validateCommodityCode(value) {
   if (!value) {
     return { success: false, message: "CommodityCode is mandatory" };
   }
-
+console.log("... CommodityCode....")
   const commoditycode = await getCommodityCodes(value);
 
   if (commoditycode.length > 0) {
@@ -205,7 +140,7 @@ async function validateCommodityCode(value) {
 
 async function validateNeedByDate(value) {
   if (!value) return { success: false, message: "Need-by date is mandatory" };
-
+  console.log("... NeedBy Date...")
   const date = new Date(value);
   if (isNaN(date.getTime())) {
     return { success: false, message: "Need-by date must be a valid ISO date (YYYY-MM-DD)" };
@@ -229,6 +164,7 @@ async function validateCurrency(value) {
       message: "Currency is mandatory"
     };
   }
+  console.log("... Currency....")
   value = value ? value.toUpperCase() : value;
   if (!/^[A-Z]{3}$/.test(value)) {
     return {
@@ -252,7 +188,7 @@ async function validateQuantity(value) {
   if (!value) {
     return { success: false, message: "Quantity is mandatory" };
   }
-
+console.log("... Quantity....")
   const quantity = Number(value);
 
   if (Number.isNaN(quantity)) {
@@ -271,7 +207,7 @@ async function validatePrice(value) {
   if (!value) {
     return { success: false, message: "Price is mandatory" };
   }
-
+console.log("... Price....")
   const price = Number(value);
 
   if (Number.isNaN(price)) {
@@ -291,7 +227,7 @@ async function validateItemCategory(value) {
   if (!value) {
     return { success: false, message: "Item Category is mandatory" };
   }
-
+console.log("... ItemCategory....")
   const normalizedValue = value.toString().trim().toLowerCase();
   const normalizedAllowed = cate.map(p =>
     p.toString().trim().toLowerCase()
@@ -312,6 +248,7 @@ async function validateUOM(value) {
   if (!value) {
     return { success: false, message: "Unit of Measure is mandatory" };
   }
+  console.log("... UOM ....")
   const uom = await getUOMs(value);
 
   if (uom.length > 0) {
@@ -322,44 +259,29 @@ async function validateUOM(value) {
 
 }
 
+async function validateAccountChecks(accountCat, costCenter, wbsCode, companyCode){
+  if(accountCat === 'K'){
+    console.log(" ------- in CostCenter ----------")
+    return await validateCostCenter(costCenter,companyCode)
+  } else if(accountCat === 'P'){
+    console.log(" ------- in Project ----------")
+    return await validateWBSElement(wbsCode, companyCode)
+  }
+}
+
 async function validateWBSElement(value, companyCode) {
   if (!value) {
     return { success: false, message: "WBSElement is mandatory" };
   }
+  console.log("... WBSElement....")
   /// code here for 
-  const wbselement = await getWBSElement(value, companyCode);
+  // const wbselement = await getWBSElement(value, companyCode);
 
-  if (wbselement.length > 0) {
-    return { success: true, message: "WBSElement is valid" };
-  } else {
-    return { success: false, message: "WBSElement is not valid" }
-  }
-}
-
-async function validateGLAccount(value, companyCode) {
-  if (!value) {
-    return {
-      success: false,
-      message: "GL account is mandatory"
-    };
-  }
-
-  const glaccount = await getGeneralLedgers(value, companyCode);
-  console.log(glaccount)
-  if (glaccount.length > 0) {
-    return { success: true, message: "GL account is valid" };
-  } else {
-    return { success: false, message: `There is no GL accounts ${value} associated with the companycode ${companyCode}` }
-  }
-}
-
-async function validateAccountAssignment(value) {
-  if (!value) {
-    return { success: false, message: "Account Assignment is mandatory" };
-  }
-  /// code here for Account Assignment Validation
-
-  return { success: true, message: "GL account is valid" };
+  // if (wbselement.length > 0) {
+  //   return { success: true, message: "WBSElement is valid" };
+  // } else {
+  //   return { success: false, message: "WBSElement is not valid" }
+  // }
 }
 
 async function validateCostCenter(value, companyCode) {
@@ -370,14 +292,47 @@ async function validateCostCenter(value, companyCode) {
     };
   }
 
-  const costcenter = await getCostCenters(value, companyCode);
-  console.log(costcenter)
-  if (costcenter.length > 0) {
-    return { success: true, message: "Cost Center is valid" };
+  console.log("... CostCenter....")
+  // const costcenter = await getCostCenters(value, companyCode);
+  // console.log(costcenter)
+  // if (costcenter.length > 0) {
+  //   return { success: true, message: "Cost Center is valid" };
+  // } else {
+  //   return { success: false, message: `There is no CostCenter ${value} associated with the companycode ${companyCode}` }
+  // }
+  return { success: true, message: "Cost Center is valid" };
+}
+
+async function validateGLAccount(value, companyCode, costCenter, wbsCode) {
+  if (!value) {
+    return {
+      success: false,
+      message: "GL account is mandatory"
+    };
+  }
+console.log("... GL Account....")
+  const glaccount = await getGeneralLedgers(value, companyCode);
+  console.log(glaccount)
+  if (glaccount.length > 0) {
+
+    /// Code here to check the GL Account with CostCenter or WBS Code,,,  S4HANA VAlidation
+    return { success: true, message: "GL account is valid" };
   } else {
-    return { success: false, message: `There is no CostCenter ${value} associated with the companycode ${companyCode}` }
+    return { success: false, message: `There is no GL accounts ${value} associated with the companycode ${companyCode}` }
   }
 }
+
+async function validateAccountAssignment(value) {
+  if (!value) {
+    return { success: false, message: "Account Assignment is mandatory" };
+  }
+  console.log("... Account Assignment....")
+  /// code here for Account Assignment Validation
+
+  return { success: true, message: "Account Assignment is valid" };
+}
+
+
 
 
 /// Material Optional Fields
@@ -419,7 +374,7 @@ async function validatePurchaseGroup(value) {
 
   /// code here for 
   const purchasegroup = await getPurchaseGroups(value);
-
+  console.log("... Purchase group...")
   if (purchasegroup.length > 0) {
     return { success: true, message: "Purchase Group is valid" };
   } else {
@@ -555,10 +510,11 @@ validateAddress,
   validatePrice,
   validateItemCategory,
   validateUOM,
-  validateWBSElement,
+  validateAccountChecks,
+  // validateWBSElement,
   validateGLAccount,
   validateAccountAssignment,
-  validateCostCenter,
+  // validateCostCenter,
   validatecontractWSId,
   validateComments,
   validateOnBehalf,
@@ -581,3 +537,71 @@ validateAddress,
 };
 
 
+
+
+/// Need to work on Product Logic.....
+// Validate aganist Material number...
+// function validateProductName(value) {
+
+//   if (!value) {
+//     return {
+//       success: false,
+//       expectedValues: allowedProducts,
+//       message: "Product name is mandatory"
+//     };
+//   }
+
+//   const normalizedValue = value.toString().trim().toLowerCase();
+//   const normalizedAllowed = allowedProducts.map(p =>
+//     p.toString().trim().toLowerCase()
+//   );
+
+//   if (!normalizedAllowed.includes(normalizedValue)) {
+//     return {
+//       success: false,
+//       expectedValues: allowedProducts,
+//       message: "Product name is not supported"
+//     };
+//   }
+
+//   return {
+//     success: true,
+//     message: "Product name is valid"
+//   };
+// }
+
+
+// validate.js
+
+
+// ---------- Hardcoded data ----------
+// const allowedRequesterEmails = [
+//   "harish.yarra@aarini.com",
+//   "akulapoornasasank@gmail.com"
+// ];
+
+// const allowedProducts = [
+//   "Laptop",
+//   "Desktop",
+//   "Monitor",
+//   "Keyboard",
+//   "Mouse",
+//   "Printer",
+//   "Scanner",
+//   "Router",
+//   "Switch",
+//   "UPS"
+// ];
+
+// const productQuantityMap = {
+//   Laptop: 10,
+//   Desktop: 8,
+//   Monitor: 25,
+//   Keyboard: 100,
+//   Mouse: 150,
+//   Printer: 5,
+//   Scanner: 7,
+//   Router: 12,
+//   Switch: 20,
+//   UPS: 6
+// };

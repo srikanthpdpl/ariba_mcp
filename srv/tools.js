@@ -21,10 +21,11 @@ const {
     validatePrice,
     validateItemCategory,
     validateUOM,
-    validateWBSElement,
+    validateAccountChecks,
+    // validateWBSElement,  /// used in validateAccountChecks
     validateGLAccount,
     validateAccountAssignment,
-    validateCostCenter,
+    // validateCostCenter,   /// used in validateAccountChecks
     validatecontractWSId,
     validateComments,
     validateOnBehalf,
@@ -62,11 +63,11 @@ module.exports = cds.service.impl(async function () {
                 /// Mandatory Fields
                 validateRequesterId(data.requesterId),
                 validateCompanyCode(data.CompanyCode),
-                validateAddress("ShipTo",data.ShipTo,data.CompanyCode),
+                validateAddress("ShipTo", data.ShipTo, data.CompanyCode),
                 validateSupplierId(data.Supplier),
-                validateAddress("DeliveryTo",data.DeliveryTo,data.CompanyCode),
-                validateAddress("BillTo",data.BillingAddress,data.CompanyCode),
-                validateAttachments(data.attachments),  //check Attachment is available
+                validateDeliverTo(data.DeliverTo),
+                validateAddress("BillTo", data.BillTo, data.CompanyCode),
+                //validateAttachments(data.attachments),  //check Attachment is available
                 // validateProductName(""),
                 validateDescription(data.Description),
                 validateCommodityCode(data.CommodityCode),
@@ -76,12 +77,14 @@ module.exports = cds.service.impl(async function () {
                 validatePrice(data.Amount),
                 validateItemCategory(data.ItemCategory),
                 validateUOM(data.UnitOfMeasure),
-                ///WBS Element????
-                //validateAccountAssignment(data.ImportedAccountCategoryStaging),  if Account type Costcenter then Costcenter Validation, else WBSElement Validation
-                validateCostCenter(data.CostCenter, data.CompanyCode),
-                validateWBSElement(data.WBSCode, data.CompanyCode), // Validate WBS Code...
-                // validateGLAccount(data.GLAccount, data.CompanyCode),
-                // validateIsSourcingPr(data.isSourcingPr),  //?? 
+                //if Account type Costcenter then Costcenter Validation, else WBSElement Validation
+                validateAccountAssignment(data.ImportedAccountCategoryStaging),  
+                validateAccountChecks(data.ImportedAccountCategoryStaging, data.CostCenter,data.WBSCode, data.CompanyCode ),
+                // the below checks are done on above line of code 
+                //validateCostCenter(data.CostCenter, data.CompanyCode),  
+                //validateWBSElement(data.WBSCode, data.CompanyCode), // Validate WBS Code...
+
+                validateGLAccount(data.GLAccount, data.CompanyCode, data.CostCenter,data.WBSCode),  // CostCenter not companycode
 
                 //// Optional Fields
                 validatecontractWSId(data.contractId), // validate contract WorkspaceID
@@ -104,9 +107,9 @@ module.exports = cds.service.impl(async function () {
                 validateCompanyCode(data.CompanyCode),
                 validateAddress("ShipTo",data.ShipTo,data.CompanyCode),
                 validateSupplierId(data.Supplier),
-                validateAddress("DeliveryTo",data.DeliveryTo,data.CompanyCode),
-                validateAddress("BillTo",data.BillingAddress,data.CompanyCode),
-                validateAttachments(data.attachments),   //check Attachment is available
+                validateDeliverTo(data.DeliverTo),
+                validateAddress("BillTo",data.BillTo,data.CompanyCode),
+                //validateAttachments(data.attachments),   //check Attachment is available
                 // validateProductName(""),
                 validateDescription(data.Description),
                 validateCommodityCode(data.CommodityCode),
@@ -116,12 +119,16 @@ module.exports = cds.service.impl(async function () {
                 validatePrice(data.Amount),
                 validateItemCategory(data.ItemCategory),
                 validateUOM(data.UnitOfMeasure),
-                ///WBS Element????
-                //validateAccountAssignment(data.ImportedAccountCategoryStaging),  if Account type Costcenter then Costcenter Validation, else WBSElement Validation
-                validateCostCenter(data.CostCenter, data.CompanyCode),
-                validateWBSElement(data.WBSCode, data.CompanyCode), // Validate WBS Code...
-                // validateGLAccount(data.GLAccount, data.CompanyCode),
-                // validateIsSourcingPr(data.isSourcingPr),  //?? 
+                //if Account type Costcenter then Costcenter Validation, else WBSElement Validation
+                validateAccountAssignment(data.ImportedAccountCategoryStaging),  
+                validateAccountChecks(data.ImportedAccountCategoryStaging, data.CostCenter,data.WBSCode, data.CompanyCode ),
+                // the below checks are done on above line of code 
+                //validateCostCenter(data.CostCenter, data.CompanyCode),  
+                //validateWBSElement(data.WBSCode, data.CompanyCode), // Validate WBS Code...
+
+                validateGLAccount(data.GLAccount, data.CompanyCode, data.CostCenter,data.WBSCode),  // CostCenter not companycode
+
+
                 validateServiceName(""),  // Service Name...???
                 validateServiceStartDate(data.ServiceStartDate),
                 validateServiceEndDate(data.ServiceEndDate),
@@ -143,6 +150,7 @@ module.exports = cds.service.impl(async function () {
             ]);
 
         }
+        console.log("logging Validations....")
         console.log(validations)
         const failed = validations.filter(v => v.success === false);
 
@@ -152,14 +160,14 @@ module.exports = cds.service.impl(async function () {
                 errors: failed
             };
         }
-
+        console.log("All validations Passed")
         return {
             success: true,
             message: "All validations passed"
         };
     }
 
-    function constructInput(data) {
+    async function constructInput(data) {
         return input = {
             "Envelope": {
                 "Header": {
@@ -186,7 +194,7 @@ module.exports = cds.service.impl(async function () {
                                         "item": [
                                             {
                                                 "BillingAddress": {
-                                                    "UniqueName": data.BillingAddress
+                                                    "UniqueName": data.BillTo
                                                 },
                                                 "CommodityCode": {
                                                     "UniqueName": data.CommodityCode
@@ -209,6 +217,9 @@ module.exports = cds.service.impl(async function () {
                                                 },
                                                 "ImportedAccountCategoryStaging": {
                                                     "UniqueName": data.ImportedAccountCategoryStaging
+                                                },
+                                                "ImportedAccountTypeStaging":{
+                                                    "UniqueName": data.ImportedAccountTypeStaging
                                                 },
                                                 "ImportedAccountingsStaging": {
                                                     "SplitAccountings": {
@@ -294,7 +305,7 @@ module.exports = cds.service.impl(async function () {
                 throw new Error(valid.errors.map(v => v.message).join("; "));
             }
 
-            const inputjson = constructInput(req.data)
+            const inputjson = await constructInput(req.data)
             return {
                 content: [{
                     type: "text",
@@ -327,6 +338,25 @@ module.exports = cds.service.impl(async function () {
         version: "1.0.0"
     });
 
+    server.registerTool("suggestOnBehalf",
+        {   title: "Cuggest onBehalf",
+            description: `Suggest on behalf of a user for purchase requisitions.`,
+            inputSchema: {
+                onbehalf: z
+                    .string()
+                    .describe("The user on whose behalf the suggestion is made.")
+                    .optional()
+            }
+        
+        },
+        async (data) => {
+            try{
+
+            }catch(error){
+
+            }
+        }
+    )
 
 
     server.registerTool(
@@ -341,60 +371,49 @@ Only provide values that satisfy validation rules.
             inputSchema: {
                 requesterId: z
                     .string()
-                    .describe("Validated requester email ID. Must be authorized and correctly formatted."),
-
-                requesterId: z
-                    .string()
-                    .describe("Validated requester email ID. Must be authorized."),
-
+                    .describe("Validated requester email ID."),
                 CompanyCode: z
                     .string()
                     .describe("Validated Company Code. Must be supported by the system."),
-
                 DeliverTo: z
                     .string()
                     .describe("Validated purchase description. Minimum 3 characters."),
-
                 NeedBy: z
                     .string()
                     .describe("Validated NeedBy. Date format should be ISO 8601 date format"),
-
-                BillingAddress: z
+                BillTo: z
                     .string()
                     .describe("Validated quoted price. Must be a String value."),
-
                 CommodityCode: z
                     .string()
                     .describe("Validated Commodity code. Must be supported."),
-
                 Description: z
                     .string()
                     .describe("Validated Description. Must more than 10 characters."),
-
                 Amount: z
                     .number()
                     .describe("Validated Amount. Must be numeric value"),
-
                 Currency: z
                     .string()
                     .describe("Validated Currency. Must be in ISO 4217 standard"),
-
                 UnitOfMeasure: z
                     .string()
                     .describe("Validated UnitOfMeasure. Must support System."),
-
                 ImportedAccountCategoryStaging: z
                     .string()
-                    .describe("Validated ImportedAccountCategoryStaging.").optional(),
-
-                Account: z
+                    .describe("Validated ImportedAccountCategoryStaging."),
+                ImportedAccountTypeStaging: z
                     .string()
-                    .describe("Validated Account."),
-
+                    .describe("Validated Account type"),
+                GLAccount: z
+                    .string()
+                    .describe("Validated GLAccount."),
                 CostCenter: z
                     .string()
                     .describe("Validated CostCenter"),
-
+                WBSCode: z
+                    .string()
+                    .describe("Validated WBSCode"),
                 NumberInCollection: z
                     .string()
                     .describe("Validated NumberInCollection. Must be numeric"),
@@ -483,13 +502,14 @@ Only provide values that satisfy validation rules.
                 if (!valid.success) {
                     throw new Error(valid.errors.map(v => v.message).join("; "));
                 }
-
+                console.log("All Validations Done....")
                 /// Sample test run ...
-                const inputjson = constructInput(data)
+                const inputjson = await constructInput(data)
+                const output = await callCreatePR(inputjson)
                 return {
                     content: [{
                         type: "text",
-                        text: JSON.stringify(await callCreatePR(inputjson))
+                        text: JSON.stringify(output)
                     }]
                 };
             } catch (error) {
@@ -521,56 +541,49 @@ Only enter compliant and verified values.
             inputSchema: {
                 requesterId: z
                     .string()
-                    .describe("Validated requester email ID. Must be authorized."),
-
+                    .describe("Validated requester email ID."),
                 CompanyCode: z
                     .string()
                     .describe("Validated Company Code. Must be supported by the system."),
-
                 DeliverTo: z
                     .string()
                     .describe("Validated purchase description. Minimum 3 characters."),
-
                 NeedBy: z
                     .string()
                     .describe("Validated NeedBy. Date format should be ISO 8601 date format"),
-
-                BillingAddress: z
+                BillTo: z
                     .string()
                     .describe("Validated quoted price. Must be a String value."),
-
                 CommodityCode: z
                     .string()
                     .describe("Validated Commodity code. Must be supported."),
-
                 Description: z
                     .string()
                     .describe("Validated Description. Must more than 10 characters."),
-
                 Amount: z
                     .number()
                     .describe("Validated Amount. Must be numeric value"),
-
                 Currency: z
                     .string()
                     .describe("Validated Currency. Must be in ISO 4217 standard"),
-
                 UnitOfMeasure: z
                     .string()
                     .describe("Validated UnitOfMeasure. Must support System."),
-
                 ImportedAccountCategoryStaging: z
                     .string()
-                    .describe("Validated ImportedAccountCategoryStaging.").optional(),
-
-                Account: z
+                    .describe("Validated ImportedAccountCategoryStaging."),
+                ImportedAccountTypeStaging: z
                     .string()
-                    .describe("Validated Account."),
-
+                    .describe("Validated Account type"),
+                GLAccount: z
+                    .string()
+                    .describe("Validated GLAccount."),
                 CostCenter: z
                     .string()
                     .describe("Validated CostCenter"),
-
+                WBSCode: z
+                    .string()
+                    .describe("Validated WBSCode"),
                 NumberInCollection: z
                     .string()
                     .describe("Validated NumberInCollection. Must be numeric"),
@@ -655,16 +668,19 @@ Only enter compliant and verified values.
             console.log("Data from Create from quotation:  --  ", data)
             try {
                 const valid = await runAllValidations(data, "quotation");
-
+                console.log("Running all validations-- ")
+                console.log(valid)
+                 console.log("End run all validations-- ")
                 if (!valid.success) {
                     throw new Error(valid.errors.map(v => v.message).join("; "));
                 }
-
-                const inputjson = constructInput(data)
+                console.log("All Validations Done....")
+                const inputjson = await constructInput(data)
+                const output = await callCreatePR(inputjson)
                 return {
                     content: [{
                         type: "text",
-                        text: JSON.stringify(await callCreatePR(inputjson))
+                        text: JSON.stringify(output)
                     }]
                 };
             } catch (error) {

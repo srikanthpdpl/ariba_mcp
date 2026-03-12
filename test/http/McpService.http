@@ -57,25 +57,26 @@ Authorization: Basic {{username}}:{{password}}
 
 
 
------------
 
 
-### createAribaPurchaseRequisition
+
+### createAribaPurchaseRequisition. --- CostCenter
 POST {{server}}/mcps/createAribaPurchaseRequisition
 Content-Type: application/json
 Authorization: Basic {{username}}:{{password}}
 
 {
   "CompanyCode": "3710",
-  "DeliverTo": "Srikanth",
-  "NeedBy": "2026-01-30T00:00:00Z",
-  "BillingAddress": "3710",
+  "DeliverTo": "Santosh",
+  "NeedBy": "2026-03-30T00:00:00Z",
+  "BillTo": "3721",
   "CommodityCode": "88.20.92.10",
   "Description": "Indirect Business services Talent Mgmt Learning and developmen",
   "Amount": 100,
   "Currency": "SGD",
   "UnitOfMeasure": "EA",
-  "ImportedAccountCategoryStaging": "Opex",
+  "ImportedAccountCategoryStaging": "K",
+  "ImportedAccountTypeStaging": "Opex",
   "Account": "0075400000",
   "CostCenter": "G370200003",
   "GLAccount": "0075400000",
@@ -87,7 +88,7 @@ Authorization: Basic {{username}}:{{password}}
   "PurchaseGroup": "003",
   "PurchaseOrg": "3710",
   "Quantity": 10,
-  "ShipTo": "3702",
+  "ShipTo": "3721",
   "Supplier": "2010005421",
   "SupplierLocation": "MAIN",
   "ImportedNeedByStaging": "2026-01-30T00:00:00Z",
@@ -102,17 +103,62 @@ Authorization: Basic {{username}}:{{password}}
 }
 
 
-------
-### createAribaPurchaseRequisition
+
+
+
+### createAribaPurchaseRequisition.  --- WBScode
 POST {{server}}/mcps/createAribaPurchaseRequisition
 Content-Type: application/json
 Authorization: Basic {{username}}:{{password}}
 
 {
   "CompanyCode": "3710",
-  "DeliverTo": "Raj Sharma",
+  "DeliverTo": "Raj",
+  "NeedBy": "2026-03-30T00:00:00Z",
+  "BillTo": "3721",
+  "CommodityCode": "88.20.92.10",
+  "Description": "Indirect Business services Talent Mgmt Learning and developmen",
+  "Amount": 100,
+  "Currency": "SGD",
+  "UnitOfMeasure": "EA",
+  "ImportedAccountCategoryStaging": "P",
+  "ImportedAccountTypeStaging": "Opex",
+  "Account": "0075400000",
+  "WBSCode": "G370200003",
+  "GLAccount": "0075400000",
+  "NumberInCollection": 1,
+  "Percentage": 100,
+  "ProcurementUnit": "3710",
+  "ItemCategory": "M",
+  "OriginatingSystemLineNumber": "1",
+  "PurchaseGroup": "003",
+  "PurchaseOrg": "3710",
+  "Quantity": 10,
+  "ShipTo": "3721",
+  "Supplier": "2010005421",
+  "SupplierLocation": "MAIN",
+  "ImportedNeedByStaging": "2026-01-30T00:00:00Z",
+  "ImportedDeliverToStaging": "Srikanth",
+  "Name": "PR Material001",
+  "OriginatingSystem": "EXT_SYSTEM",
+  "PasswordAdapter": "PasswordAdapter1",
+  "Preparer": "SRIANTH",
+  "Requester": "SRIANTH",
+  "UniqueName": "EXT-PR-100002",
+  "requesterId":"AFSHAN.AHMED@LIPTON.COM"
+}
+
+
+### createAribaPurchaseRequisition. --- Service Request
+POST {{server}}/mcps/createAribaPurchaseRequisition
+Content-Type: application/json
+Authorization: Basic {{username}}:{{password}}
+
+{
+  "CompanyCode": "3710",
+  "DeliverTo": "Srikanth",
   "NeedBy": "2026-02-28T00:00:00Z",
-  "BillingAddress": "3710",
+  "BillTo": "3721",
   "CommodityCode": "88.40.10.12",
   "Description": "Indirect-IT-IT Hardware-IT Hardware component",
   "Amount": 188,
@@ -130,7 +176,7 @@ Authorization: Basic {{username}}:{{password}}
   "PurchaseGroup": "003",
   "PurchaseOrg": "3710",
   "Quantity": 10,
-  "ShipTo": "3702",
+  "ShipTo": "3721",
   "Supplier": "2010005421",
   "SupplierLocation": "MAIN",
   "ImportedNeedByStaging": "2026-02-28T00:00:00Z",

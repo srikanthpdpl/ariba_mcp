@@ -127,8 +127,8 @@ async function getGeneralLedgers(glaccount, companycode) {
 async function getIncoTerms() {
   return await getAPIData(incoterms_url);
 }
-async function getPurchaseGroups() {
-  return await getAPIData(purchasegroups_url);
+async function getPurchaseGroups(purchasegroup) {
+  return await getAPIData(purchasegroups_url + `?$filter=UniqueName eq '${purchasegroup}'`);
 }
 async function getAccountTypes() {
   return await getAPIData(accounttypes_url);
