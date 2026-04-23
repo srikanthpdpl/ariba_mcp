@@ -4,6 +4,9 @@ const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/ser
 const { z } = require("zod");
 // const { v4: uuidv4 } =  import('uuid');
 z.string().des
+const { getSupplierByName, getCommodityCodesByName, 
+        getCompanyCodeByName, getcommodityexportmapentrydetails,
+        getUser } = require("./apicalls");
 const {
     validateRequesterId,
     validateCompanyCode,
@@ -73,10 +76,10 @@ module.exports = cds.service.impl(async function () {
                 validateCommodityCode(data.CommodityCode),
                 validateNeedByDate(data.NeedBy),
                 validateCurrency(data.Currency),
-                validateQuantity(data.Quantity),
+                validateQuantity(data.Quantity, ""),
                 validatePrice(data.Amount),
                 validateItemCategory(data.ItemCategory),
-                validateUOM(data.UnitOfMeasure),
+                validateUOM(data.UnitOfMeasure,""),
                 //if Account type Costcenter then Costcenter Validation, else WBSElement Validation
                 validateAccountAssignment(data.ImportedAccountCategoryStaging),  
                 validateAccountChecks(data.ImportedAccountCategoryStaging, data.CostCenter,data.WBSCode, data.CompanyCode ),
@@ -115,10 +118,10 @@ module.exports = cds.service.impl(async function () {
                 validateCommodityCode(data.CommodityCode),
                 validateNeedByDate(data.NeedBy),
                 validateCurrency(data.Currency),
-                validateQuantity(data.Quantity),
+                validateQuantity(data.Quantity, "service"),
                 validatePrice(data.Amount),
                 validateItemCategory(data.ItemCategory),
-                validateUOM(data.UnitOfMeasure),
+                validateUOM(data.UnitOfMeasure,"service"),
                 //if Account type Costcenter then Costcenter Validation, else WBSElement Validation
                 validateAccountAssignment(data.ImportedAccountCategoryStaging),  
                 validateAccountChecks(data.ImportedAccountCategoryStaging, data.CostCenter,data.WBSCode, data.CompanyCode ),
@@ -129,7 +132,7 @@ module.exports = cds.service.impl(async function () {
                 validateGLAccount(data.GLAccount, data.CompanyCode, data.CostCenter,data.WBSCode),  // CostCenter not companycode
 
 
-                validateServiceName(""),  // Service Name...???
+                validateServiceName(data.Name),  // Service Name...???
                 validateServiceStartDate(data.ServiceStartDate),
                 validateServiceEndDate(data.ServiceEndDate),
                 validateMaxAmount(data.MaxAmount),
@@ -296,6 +299,7 @@ module.exports = cds.service.impl(async function () {
     }
 
 
+    /*
     this.on('createAribaPurchaseRequisition', async (req) => {
 
         try {
@@ -328,6 +332,49 @@ module.exports = cds.service.impl(async function () {
             };
         }
     });
+    */
+
+    this.on('createAribaPurchaseRequisition', async (req) => {
+        try{
+        
+            /*
+        var quantity = req.data.Quantity
+        var amount = req.data.Amount
+        var currency = req.data.Currency
+
+        var suppliercode = (await getSupplierByName(req.data.Name))[0].UniqueName
+        var commoditycode = (await getCommodityCodesByName(req.data.Description))[0].UniqueName
+        var companycode = (await getCompanyCodeByName(req.data.CompanyCode))[0].UniqueName
+        var accountdetails = await getcommodityexportmapentrydetails(commoditycode, companycode)
+
+        var accountcategory = accountdetails[0].AccountCategory.UniqueName
+        var accounttype = accountdetails[0].AccountType
+        var BillTo = accountdetails[0].BillingAddress.UniqueName
+        var ItemCategory = accountdetails[0].ItemCategory.UniqueName
+        var GeneralLedger = accountdetails[0].GeneralLedger.UniqueName
+
+        */
+        
+        //Preparer. ??
+        //Requestor.  ??
+        //PasswordAdapter. -- Hardcoded value
+       // await getUser(req.data.requesterId);
+
+        // Payment term code ??  Supplier API--- 
+
+        //DeliverTo. -- requestor ID get Name and assign
+        //ShipTo.  -- Companycode
+        //Needby. -- User will enter  (more than Current date + 3 days)
+
+
+        //Mutiple Material (Line items)????
+        //WBSCode / Cost Center?   --- S4 SAP
+        //Payment Terms -- S4 SAP 
+
+        } catch (error) {
+            console.log(error)
+        }
+    });
 
 
     // Tools
@@ -339,7 +386,7 @@ module.exports = cds.service.impl(async function () {
     });
 
     server.registerTool("suggestOnBehalf",
-        {   title: "Cuggest onBehalf",
+        {   title: "Suggest onBehalf",
             description: `Suggest on behalf of a user for purchase requisitions.`,
             inputSchema: {
                 onbehalf: z
@@ -358,7 +405,40 @@ module.exports = cds.service.impl(async function () {
         }
     )
 
+    server.registerTool("validationAgent", {
+        title: "Validation Agent",
+        description: `Validation agent is used 
+        to validate the PR data and Validates all 
+        fields which will be sent to create agent 
+        for Creation of PR`,
+        inputSchema:{
+                Description: z
+                    .string()
+                    .describe("Validated Description. Must more than 10 characters."),
+                Amount: z
+                    .number()
+                    .describe("Validated Amount. Must be numeric value"),
+                Currency: z
+                    .string()
+                    .describe("Validated Currency. Must be in ISO 4217 standard"),
+                UnitOfMeasure: z
+                    .string()
+                    .describe("Validated UnitOfMeasure. Must support System."),
+                Supplier: z
+                    .string()
+                    .describe("Validated Supplier. Must support system"),
+                
+                ServiceStartDate: z
+                    .string()
+                    .describe("Validated serviceStartDate. Date format should be ISO 8601 date format").optional(),
 
+                ServiceEndDate: z
+                    .string()
+                    .describe("Validated servcieEndDate. Date format should be ISO 8601 date format").optional(),
+        }
+    })
+
+    /*
     server.registerTool(
         "createPrWithContract",
         {
@@ -699,6 +779,7 @@ Only enter compliant and verified values.
             }
         }
     );
+    */
 
     /*
         server.registerTool(

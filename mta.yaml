@@ -20,6 +20,7 @@ modules:
       CLIENT_ID: "0fa811d9-4bee-43b3-a0b6-c88e97af7b6c"
       CLIENT_SECRET: "7aMdwz1h8qT7bq3W5hoKojUCfrU4Zxu3"
       XREALM: "EKATERRA-T"
+      XREALM_C: "EKATERRA1-T"
       XANID: "AN11072353778-T"
       USERAPIKEY: "RTa9huiOH238wiQnrxcVFQwVgE6b3pmf"
       APIKEY: "Jhs9yPQgBLCnd3WufYCT1Mi3fUFXN0HZ"
@@ -28,6 +29,7 @@ modules:
 
       # Referencing the parameter defined at the top level
       BASE_URL: "${ariba-entity-base-url}"
+      COMMODITYCODESEXPORTMAP_URL: "${ariba-entity-base-url}/commodityexportmapentry"
       COMMODITYCODES_URL: "${ariba-entity-base-url}/commoditycodes"
       PRODUCTS_URL: "${ariba-entity-base-url}/products"
       CURRENCY_URL: "${ariba-entity-base-url}/currency"

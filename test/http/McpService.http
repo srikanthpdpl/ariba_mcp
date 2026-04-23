@@ -194,3 +194,55 @@ Authorization: Basic {{username}}:{{password}}
   "ExpectedAmount": 100
 }
 
+
+### createAribaPurchaseRequisition. --- Testing with Data
+POST {{server}}/mcps/createAribaPurchaseRequisition
+Content-Type: application/json
+Authorization: Basic {{username}}:{{password}}
+
+{
+"Name" : "SOAP Material Test Ariba PR ",
+"CompanyCode" : "3710",
+"ShipTo" : "3702",
+"Supplier" : "2010005421",
+"DeliverTo" : "Raj Sharma",
+"Description" : "Indirect-IT-IT Hardware-IT Hardware component",
+"CommodityCode" : "88.40.10.12",
+"NeedBy" : "2026-04-30T00:00:00Z",
+"Currency" : "EUR",
+"Quantity" : 10,
+"Amount" : 188,
+"ItemCategory" : "M",
+"UnitOfMeasure" : "EA",
+"ImportedAccountTypeStaging" : "Opex",
+"Account" : "71500000",
+"CostCenter" : "G370200003",
+"Requester" : "SANLOKH",
+"PurchaseGroup" : "003",
+"PurchaseOrg" : "3710"
+}
+
+
+
+
+
+### createAribaPurchaseRequisition.
+POST {{server}}/mcps/createAribaPurchaseRequisition
+Content-Type: application/json
+Authorization: Basic {{username}}:{{password}}
+
+{
+  
+  "Name": "MartinBauerTrading (China ) Co.,Ltd",
+  "CompanyCode": "ekaterra Global Operation",
+
+  "Description": "Indirect-Logistics-Raw & Pack Services-Raw & Pack Warehouse",
+  "Quantity": 10,
+  "Amount": 1000,
+  "Currency": "EUR",
+  
+  "onbehalf":  "Srikanth.Anthargam@lipton.com",
+  "requesterId": "Srikanth.Anthargam@lipton.com"
+
+
+}

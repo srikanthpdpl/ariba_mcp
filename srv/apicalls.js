@@ -19,10 +19,12 @@ const clientId = process.env.CLIENT_ID
 const clientSecret = process.env.CLIENT_SECRET
 
 const x_realm = process.env.XREALM
+const x_realm_c = process.env.XREALM_C
 const x_anId = process.env.XANID
 const userapikey = process.env.USERAPIKEY
 const apikey = process.env.APIKEY
 
+const commodityexportmapentry_url = process.env.COMMODITYCODESEXPORTMAP_URL
 const commoditycodes_url = process.env.COMMODITYCODES_URL
 const products_url = process.env.PRODUCTS_URL
 const currency_url = process.env.CURRENCY_URL
@@ -69,8 +71,27 @@ async function getAPIData(apiurl) {
   }
 }
 
+async function getC_APIData(apiurl) {
+  console.log(apiurl)
+  const accessToken = await getAccessToken(); if (!accessToken) {
+    throw new Error("Access token is undefined");
+  }
+  else {
+    const response = await axios.get(apiurl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "X-Realm": x_realm_c,
+        apiKey: apikey,
+        "Accept-Language": "en"
+      }
+    });
+    return response.data;
+  }
+}
+
 async function getUser(userID) {
-  const apiurl = `${users_url}?filter=emails.value eq "${userID}"`
+  // const apiurl = `${users_url}?$filter=emails.value eq "${userID}"`
+  const apiurl = `${users_url}?count=9999`
   console.log(apiurl)
   const accessToken = await getAccessToken();
   console.log(accessToken)
@@ -85,21 +106,70 @@ async function getUser(userID) {
         apiKey: userapikey
       }
     });
-    return response.data;
+    console.log( typeof response.data)
+    var jsonList = response.data
+  const results = jsonList.filter(item =>
+    item.emails[0].value.toLowerCase().includes(userID.toLowerCase())
+  );
+    // return response.data;
+    return results
   }
+}
+
+async function getCompanyCodeByName(companycodeNAme) {
+  console.log(companycodeNAme)
+  var jsonList = await getAPIData(companycodes_url + `?$top=9999`);
+  // console.log(jsonList)
+  const results = jsonList.filter(item =>
+    item.Description.toLowerCase().includes(companycodeNAme.toLowerCase())
+  );
+  console.log(results)
+  return results
 }
 
 async function getCompanyCodes(companycode) {
   return await getAPIData(companycodes_url + `?$filter=UniqueName eq '${companycode}'`);
 }
 
+async function getSupplierByName(supplierName){
+  //console.log(supplierName)
+  var jsonList = await getC_APIData(suppliers_url);
+  console.log(jsonList)
+  const results = jsonList.filter(item =>
+    item.Name.toLowerCase().includes(supplierName.toLowerCase())
+  );
+  console.log(results)
+  console.log(results[0].UniqueName)
+  return results
+}
+
 async function getSuppliers(supplierId) {
-  return await getAPIData(suppliers_url + `?$filter=UniqueName eq '${supplierId}'`);
+  return await getC_APIData(suppliers_url + `?$filter=UniqueName eq '${supplierId}'`);
 }
 
 async function getContractIds() {
   return await getAPIData(contract_url);
 }
+
+async function getcommodityexportmapentrydetails(commoditycode,companycode){
+console.log(commoditycode)
+  var results = await getC_APIData(commodityexportmapentry_url + 
+          `?$filter=CommodityCode.UniqueName eq '${commoditycode}' and CompanyCode eq '${companycode}'`);
+  console.log(results)
+  return results
+}
+
+async function getCommodityCodesByName(materialName){
+  console.log(materialName)
+  var jsonList = await getAPIData(commoditycodes_url + `?$top=9999`);
+  // console.log(jsonList)
+  const results = jsonList.filter(item =>
+    item.Name_en.toLowerCase().includes(materialName.toLowerCase())
+  );
+  console.log(results)
+  return results
+}
+
 async function getCommodityCodes(commoditycode) {
   return await getAPIData(commoditycodes_url + `?$filter=UniqueName eq '${commoditycode}'`);
 }
@@ -351,7 +421,8 @@ async function parseRequisitionImportPullResponse(xml) {
 module.exports = {
   getUser, getContractIds, getCommodityCodes, getIncoTerms, getProducts, getCurrency,
   getCompanyCodes, getSuppliers, getCostCenters, getPurchaseGroups, getAccountTypes,getAddress,
-  getWBSElement, getGeneralLedgers, getUOMs, getAccounts, getPaymentTerms, callAribaRequisitionImportPull
+  getWBSElement, getGeneralLedgers, getUOMs, getAccounts, getPaymentTerms, callAribaRequisitionImportPull,
+  getSupplierByName, getCommodityCodesByName, getCompanyCodeByName, getcommodityexportmapentrydetails
 };
 
 // (async () => {

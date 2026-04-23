@@ -1,5 +1,5 @@
 const cds = require('@sap/cds');
-const fetch = import('node-fetch');
+// const fetch = import('node-fetch');
 // const { v4: uuidv4 } = import('uuid');
 const { getUser, getContractIds, getCommodityCodes, getIncoTerms, getProducts, getCurrency,
   getCompanyCodes, getSuppliers, getCostCenters, getPurchaseGroups, getAccountTypes, getAddress,
@@ -68,8 +68,8 @@ async function validateCompanyCode(value) {
 
 
 /// Shipto, DeliverTo, BillingAddress. ---- type can be "ShipTo,BillTo,DeliveryTo"
-async function validateAddress(type,value, companycode) {
-  if (!value) return { success: false, message: type+" is mandatory" };
+async function validateAddress(type, value, companycode) {
+  if (!value) return { success: false, message: type + " is mandatory" };
   console.log("... Address....")
   // const shipto = await getAddress(value, companycode);
 
@@ -78,7 +78,7 @@ async function validateAddress(type,value, companycode) {
   // } else {
   //   return { success: false, message: type+" is not valid" }
   // }
-  return { success: true, message: type+" is valid" };
+  return { success: true, message: type + " is valid" };
 }
 
 
@@ -88,19 +88,19 @@ async function validateSupplierId(value) {
     return { success: false, message: "Supplier ID is mandatory" };
   }
   console.log("... SupplierID....")
-  // const supplier = await getSuppliers(value);
+  const supplier = await getSuppliers(value);
 
-  // if (supplier.length > 0) {
-  //   return { success: true, message: "Supplier ID is valid" };
-  // } else {
-  //   return { success: false, message: "Supplier is not valid" }
-  // }
-  return { success: true, message: "Supplier ID is valid" };
+  if (supplier.length > 0) {
+    return { success: true, message: "Supplier ID is valid" };
+  } else {
+    return { success: false, message: "Supplier is not valid" }
+  }
+  // return { success: true, message: "Supplier ID is valid" };
 }
 
 async function validateDeliverTo(value) {
   if (!value) return { success: false, message: "DeliverTo is mandatory" };
-console.log("... Deliver To....")
+  console.log("... Deliver To....")
   return { success: true, message: "DeliverTo is valid" };
 }
 
@@ -128,7 +128,7 @@ async function validateCommodityCode(value) {
   if (!value) {
     return { success: false, message: "CommodityCode is mandatory" };
   }
-console.log("... CommodityCode....")
+  console.log("... CommodityCode....")
   const commoditycode = await getCommodityCodes(value);
 
   if (commoditycode.length > 0) {
@@ -183,21 +183,28 @@ async function validateCurrency(value) {
 }
 
 /// Need logic to check the MAX Quantity...?  -- No need to check MAX quantity
-async function validateQuantity(value) {
+async function validateQuantity(value, type) {
   // if (value === null || value === undefined || value === "") {
   if (!value) {
     return { success: false, message: "Quantity is mandatory" };
   }
-console.log("... Quantity....")
+  console.log("... Quantity....")
   const quantity = Number(value);
+  if (type === 'service') {
+    if (value != 1) {
+      return { success: false, message: "Quantity must be 1 for Servcie Request" };
+    }
+  }
+  else {
+    if (Number.isNaN(quantity)) {
+      return { success: false, message: "Quantity must be a number" };
+    }
 
-  if (Number.isNaN(quantity)) {
-    return { success: false, message: "Quantity must be a number" };
+    if (quantity <= 0) {
+      return { success: false, message: "Quantity must be greater than zero" };
+    }
   }
 
-  if (quantity <= 0) {
-    return { success: false, message: "Quantity must be greater than zero" };
-  }
 
   return { success: true, message: "Quantity is valid", value: quantity };
 }
@@ -207,7 +214,7 @@ async function validatePrice(value) {
   if (!value) {
     return { success: false, message: "Price is mandatory" };
   }
-console.log("... Price....")
+  console.log("... Price....")
   const price = Number(value);
 
   if (Number.isNaN(price)) {
@@ -227,7 +234,7 @@ async function validateItemCategory(value) {
   if (!value) {
     return { success: false, message: "Item Category is mandatory" };
   }
-console.log("... ItemCategory....")
+  console.log("... ItemCategory....")
   const normalizedValue = value.toString().trim().toLowerCase();
   const normalizedAllowed = cate.map(p =>
     p.toString().trim().toLowerCase()
@@ -244,26 +251,56 @@ console.log("... ItemCategory....")
   return { success: true, message: "Item Category is valid" };
 }
 
-async function validateUOM(value) {
+async function validateUOM(value,type) {
   if (!value) {
     return { success: false, message: "Unit of Measure is mandatory" };
   }
   console.log("... UOM ....")
   const uom = await getUOMs(value);
 
-  if (uom.length > 0) {
-    return { success: true, message: "UOM is valid" };
-  } else {
-    return { success: false, message: "UOM is not valid" }
+  if (type === 'service') {
+    if (value != "AU") {
+      return { success: false, message: "Unit of Measure (UOM) must be 'AU' for Servcie Request" };
+    }
   }
+  else {
 
+    if (uom.length <= 0) {
+      return { success: false, message: "UOM is not valid" }
+    }
+
+  }
+  return { success: true, message: "UOM is valid" };
 }
 
-async function validateAccountChecks(accountCat, costCenter, wbsCode, companyCode){
-  if(accountCat === 'K'){
+async function validateAccountChecks(accountCat, costCenter, wbsCode, companyCode) {
+  console.log("...Account Check....")
+  if (!accountCat){
+    console.log("...Account Check1....")
+     return { success: false, message: "Account Category is mandatory" };
+  }
+  if (accountCat === 'K') {
+    console.log("...Account Check2....")
+    if(!costCenter){
+      console.log("...Account Check3....")
+       return { success: false, message: "Costcenter is mandatory" };
+    }
+    if(!companyCode){
+      console.log("...Account Check4....")
+       return { success: false, message: "CompanyCode is mandatory" };
+    }
     console.log(" ------- in CostCenter ----------")
-    return await validateCostCenter(costCenter,companyCode)
-  } else if(accountCat === 'P'){
+    return await validateCostCenter(costCenter, companyCode)
+  } else if (accountCat === 'P') {
+    console.log("...Account Check5....")
+    if(!wbsCode){
+      console.log("...Account Check6....")
+       return { success: false, message: "WbsCode is mandatory" };
+    }
+    if(!companyCode){
+      console.log("...Account Check7....")
+       return { success: false, message: "CompanyCode is mandatory" };
+    }
     console.log(" ------- in Project ----------")
     return await validateWBSElement(wbsCode, companyCode)
   }
@@ -282,6 +319,7 @@ async function validateWBSElement(value, companyCode) {
   // } else {
   //   return { success: false, message: "WBSElement is not valid" }
   // }
+  return { success: true, message: "WBSElement is valid" };
 }
 
 async function validateCostCenter(value, companyCode) {
@@ -310,7 +348,7 @@ async function validateGLAccount(value, companyCode, costCenter, wbsCode) {
       message: "GL account is mandatory"
     };
   }
-console.log("... GL Account....")
+  console.log("... GL Account....")
   const glaccount = await getGeneralLedgers(value, companyCode);
   console.log(glaccount)
   if (glaccount.length > 0) {
@@ -384,7 +422,7 @@ async function validatePurchaseGroup(value) {
 
 async function validateIsSourcingPr(value) {
   // if (value === undefined || value === null) {
-  if (!value){
+  if (!value) {
     return { success: true, message: "Sourcing flag is valid" };
   }
 
@@ -497,7 +535,7 @@ module.exports = {
   validateRequesterId,
   validateCompanyCode,
   // validateShipTo,
-validateAddress,
+  validateAddress,
   validateSupplierId,
   validateDeliverTo,
   validateAttachments,
